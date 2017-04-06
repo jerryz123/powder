@@ -4,21 +4,119 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta http-equiv="Content-Style-Type" content="text/css" />
   <meta name="generator" content="pandoc" />
-  <meta name="author" content="Jackson Wen Hankun Zhao" />
-  <title>CS 184 Final Project Proposal</title>
+  <meta name="author" content="CS 184 Final Project Proposal" />
+  <title>Animating Explosions with an Incompressible Fluid Model</title>
   <style type="text/css">code{white-space: pre;}</style>
   <link rel="stylesheet" href="stylesheet.css" type="text/css" />
 </head>
 <body>
 <div id="header">
-<h1 class="title">CS 184 Final Project Proposal</h1>
-<h2 class="author">Jackson Wen Hankun Zhao</h2>
+<h1 class="title">Animating Explosions with an Incompressible Fluid Model</h1>
+<h2 class="author">CS 184 Final Project Proposal</h2>
+<h3 class="date">Jackson Wen, Hankun Zhao</h3>
 </div>
 <div id="TOC">
 <ul>
-<li><a href="#overview">Overview</a></li>
+<li><a href="#summary">Summary</a></li>
+<li><a href="#problem-description">Problem Description</a></li>
+<li><a href="#goals-and-deliverables">Goals and Deliverables</a><ul>
+<li><a href="#baseline-goals">Baseline Goals</a></li>
+<li><a href="#stretch-goals">Stretch Goals</a></li>
+<li><a href="#deliverable">Deliverable</a></li>
+<li><a href="#metrics">Metrics</a></li>
+</ul></li>
+<li><a href="#schedule">Schedule</a><ul>
+<li><a href="#week-1">Week 1</a></li>
+<li><a href="#week-2">Week 2</a></li>
+<li><a href="#week-3">Week 3</a></li>
+<li><a href="#week-4">Week 4</a></li>
+</ul></li>
+<li><a href="#resources">Resources</a></li>
 </ul>
 </div>
-<h1 id="overview">Overview</h1>
+<h1 id="summary">Summary</h1>
+<p>We plan to simulate explosions using an incompressible fluid model. We hope to create a sandbox environment which simulates interactions between combustible fuel particles, static objects, the atmosphere, and the environment temperature.</p>
+<h1 id="problem-description">Problem Description</h1>
+<p>We hope to simulate explosions using incompressible fluid dynamics, as described in Feldman 2003. While compressible fluid dynamics more accurately describe the pressure field of an explosion and the propagation of its blast wave, it also is more expensive to compute. A incompressible model should be able to simulate the fireball and particulate effects of an explosion accurately.</p>
+<p>The primary challenge is solving Navier Stokes to simulate fluid flow and simulating temperature interactions between the fluid and combusting particles. We will need to consider many interactions in our simulation, including</p>
+<ul>
+<li>Interactions between combusting particles and the fluid field</li>
+<li>Interactions between combusting particles and the temperature field</li>
+<li>Interactions between soot particles and the fluid field</li>
+<li>Interactions between particles, the fluid, and solid objects</li>
+<li>Interactions between the temperature field and the fluid field</li>
+</ul>
+<p>We also need to consider performance, since we would like this to run in real time. We may need to implement interesting data structures to enhance performance.</p>
+<p>We will start with a robust 2D simulation model that can easily be extended to 3D. We will approach this problem by implementing levels of simulation in layers.</p>
+<ul>
+<li>Simulate fluid flow with Navier Stokes</li>
+<li>Simulate temperature flow with temperature transport equations</li>
+<li>Simulate temperature effects on fluid flow</li>
+<li>Simulate particle flow in fluid field</li>
+<li>Simulate combustion effects on fluid field, temperature field</li>
+</ul>
+<h1 id="goals-and-deliverables">Goals and Deliverables</h1>
+<h2 id="baseline-goals">Baseline Goals</h2>
+<p>2D simulation of explosions with incompressible navier stokes as detailed in Feldman 2003. Simulation should be user interactive. User should be able to place and ignite fuel particles.</p>
+<p>This involves:</p>
+<ul>
+<li>Solving navier-stokes equations in 2D to represent the incompressible gas model</li>
+<li>Solve temperature transport equations to simulate temperature field in our environment</li>
+<li>Simulate particulate interactions with the fluid model and the temperature model</li>
+<li>Simulate combustion of fuel particles</li>
+<li>Rudimentary user interface for user-input explosions</li>
+</ul>
+<h2 id="stretch-goals">Stretch Goals</h2>
+<p>There are many ways we can extend the 2D simulation.</p>
+<ul>
+<li>Expand simulation to 3D</li>
+<li>Incorporate smoke and fire effects</li>
+<li>Incorporate a simple particle-based fluids model</li>
+<li>Implement multiple types of explosive</li>
+<li>Simulate explosion interaction with dynamic objects</li>
+<li>Implement interesting shaders to improve realism of simulation</li>
+</ul>
+<h2 id="deliverable">Deliverable</h2>
+<ul>
+<li>Animation of simulation complete with temperature display and user interactive interface.</li>
+<li>Demo of user input explosions</li>
+</ul>
+<h2 id="metrics">Metrics</h2>
+<p>We will evaluate our simulation by comparing it to real videos of explosions. We hope to be able go see fireball effects, specifically the rising soot cloud. We hope to also see some vorticity in the soot clouds.</p>
+<p>We will evaluate the performance by comparing FPS to voxels simulated. Ideally, the simulation should run at at least 1 FPS.</p>
+<h1 id="schedule">Schedule</h1>
+<h2 id="week-1">Week 1</h2>
+<ul>
+<li>Read and understand papers</li>
+<li>Create interface with OpenGL</li>
+<li>Display and animate arbitrary fluid field, temperature field, particle motion</li>
+</ul>
+<h2 id="week-2">Week 2</h2>
+<ul>
+<li>Use Navier-Stokes to simulate the flow of the fluid field</li>
+<li>Simulate the model from an arbitrary starting configuration</li>
+<li>Simulate interactions with static objects</li>
+<li>Implement temperature flow and temperature interactions with the fluid</li>
+</ul>
+<h2 id="week-3">Week 3</h2>
+<ul>
+<li>Simulate particulate model and interactions with fluid field and temperature</li>
+<li>Implement real-time user input of fuel particles</li>
+</ul>
+<h2 id="week-4">Week 4</h2>
+<ul>
+<li>Debug</li>
+<li>Stretch goals?</li>
+<li>Finalize presentation</li>
+</ul>
+<h1 id="resources">Resources</h1>
+<p><a href="Feldman-paper.pdf">Feldman's</a> paper describes how to model explosions using incompressible fluid dynamics. We will follow the methods outlined in this paper.</p>
+<p>Supporting resources</p>
+<ul>
+<li><a href="https://docs.google.com/viewer?url=https://www.doc.ic.ac.uk/~dfg/graphics/GraphicsLecture17.pdf">Rendering realistic flame and smoke effects</a></li>
+<li><a href="https://graphics.ethz.ch/teaching/former/imagesynthesis_06/miniprojects/p3/"> Rendering 2D flames</a></li>
+<li><a href="https://docs.google.com/viewer?url=http://physbam.stanford.edu/~fedkiw/papers/stanford2002-06.pdf">Overview of particle-based simulation effects</a></li>
+<li><a href="http://www.dgp.toronto.edu/people/stam/reality/Research/pdf/ns.pdf">Solving Navier-Stokes</a></li>
+</ul>
 </body>
 </html>
