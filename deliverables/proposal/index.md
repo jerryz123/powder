@@ -1,6 +1,6 @@
 % Animating Explosions with an Incompressible Fluid Model
 % CS 184 Final Project Proposal
-% Jackson Wen, Hankun Zhao
+% Yujie Wen, Hankun Zhao
 
 # Summary
 We plan to simulate explosions using an incompressible fluid model. We hope to create a sandbox environment which simulates interactions between combustible fuel particles, static objects, the atmosphere, and the environment temperature.
