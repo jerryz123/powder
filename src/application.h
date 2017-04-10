@@ -29,14 +29,17 @@ struct AppConfig {
     // Environment variables
     gravity = Vector2D(0, -1);
     steps_per_frame = 64;
+    voxel_width = 100;
+    voxel_height = 100;
   }
 
     /* Define global vars here */
   /* float mass; */
   /* float ks; */
-
-  float steps_per_frame;
-  Vector2D gravity;
+    size_t voxel_width;
+    size_t voxel_height;
+    float steps_per_frame;
+    Vector2D gravity;
 };
 
 class Application : public Renderer {
@@ -65,6 +68,7 @@ private:
 
   size_t screen_width;
   size_t screen_height;
+  Environment* env;
 
 }; // class Application
 

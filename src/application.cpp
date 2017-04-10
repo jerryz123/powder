@@ -27,6 +27,8 @@ void Application::init() {
   //                      config.ks, {0});
   // ropeVerlet = new Rope(Vector2D(0, 200), Vector2D(-400, 200), 20, config.mass,
   //                       config.ks, {0});
+  env = new Environment(config.voxel_width, config.voxel_height);
+  env->init();
 }
 
 void Application::render() {
