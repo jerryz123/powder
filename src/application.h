@@ -27,19 +27,23 @@ struct AppConfig {
     /* ks = 100; */
 
     // Environment variables
-    gravity = Vector2D(0, -1);
+      gravity = Vector3D(0, -1, 0);
     steps_per_frame = 64;
-    voxel_width = 100;
-    voxel_height = 100;
+    cell_width = 1.0;
+    cell_height = 1.0;
+    nx_cells = 500;
+    ny_cells = 500;
   }
 
     /* Define global vars here */
   /* float mass; */
   /* float ks; */
-    size_t voxel_width;
-    size_t voxel_height;
+    size_t nx_cells;
+    size_t ny_cells;
     float steps_per_frame;
-    Vector2D gravity;
+    float cell_width;
+    float cell_height;
+    Vector3D gravity;
 };
 
 class Application : public Renderer {

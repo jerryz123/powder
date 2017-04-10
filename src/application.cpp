@@ -22,13 +22,9 @@ void Application::init() {
   glLineWidth(4);
 
   glColor3f(1.0, 1.0, 1.0);
+  env = new Environment(config.nx_cells, config.ny_cells,
+                        config.cell_width, config.cell_height);
 
-  // ropeEuler = new Rope(Vector2D(0, 200), Vector2D(-400, 200), 20, config.mass,
-  //                      config.ks, {0});
-  // ropeVerlet = new Rope(Vector2D(0, 200), Vector2D(-400, 200), 20, config.mass,
-  //                       config.ks, {0});
-  env = new Environment(config.voxel_width, config.voxel_height);
-  env->init();
 }
 
 void Application::render() {
@@ -41,9 +37,16 @@ void Application::render() {
 
   // Draw to screen here
 
-  
-  // Rope *rope;
 
+  glBegin(GL_POINTS);
+  for (int y = 0; y < config.nx_cells; y++) {
+      for (int x = 0; x < config.ny_cells; x++) {
+          Vector3D u = env->u0_field[y*config.nx_cells+x]->u;
+          glColor3f(u.x, u.y, u.z);
+          glVertex2d(x, y);
+      }
+  }
+  glEnd();
   // for (int i = 0; i < 2; i++) {
   //   if (i == 0) {
   //     glColor3f(0.0, 0.0, 1.0);
@@ -86,7 +89,7 @@ void Application::resize(size_t w, size_t h) {
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glOrtho(-half_width, half_width, -half_height, half_height, 1, 0);
+  glOrtho(0, screen_width, 0, screen_height, 1, 0);
 }
 
 void Application::keyboard_event(int key, int event, unsigned char mods) {
