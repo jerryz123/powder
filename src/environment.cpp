@@ -85,58 +85,112 @@ namespace CGL {
 
     }
 
-    void Environment::add_source(int N, int M, float * x, float * s, float dt) {
-        int i, size = (N + 2) * (M + 2);
-        for ( i = 0 ; i < size ; i++ ) x[i] += dt * s[i];
+    void Environment::add_source(float * x, float * s, float dt) {
+        int i, size = ((nx_cells - 2) + 2) * ((ny_cells - 2) + 2);
+        for (i = 0; i < size; i++ ) x[i] += dt * s[i];
     }
 
-    void Environment::diffuse(int N, int M, int b, float * x, float * x0, float diff, float dt) {
+    void Environment::diffuse(int b, float * x, float * x0, float diff, float dt) {
         int i, j, k;
-        float a = dt * diff * N * M;
-        for ( k = 0 ; k < 20 ; k++ ) {
-            for ( i = 1 ; i <= N ; i++ ) {
-                for ( j=1 ; j <= M ; j++ ) {
-                    x[IX(i, j)] = (x0[IX(i, j)] + a * (x[IX(i - 1, j)] + x[IX(i + 1, j)] +
-                                                   x[IX(i, j - 1)] + x[IX(i, j + 1)])) / (1 + 4 * a);
+        float a = dt * diff * (nx_cells - 2) * (ny_cells - 2);
+        for (k = 0; k < 20; k++ ) {
+            for (i = 1; i <= (nx_cells - 2); i++ ) {
+                for (j = 1; j <= (ny_cells - 2); j++ ) {
+                    x[ID(i, j)] = (x0[ID(i, j)] + a * (x[ID(i - 1, j)] + x[ID(i + 1, j)] +
+                                                   x[ID(i, j - 1)] + x[ID(i, j + 1)])) / (1 + 4 * a);
                 }
             }
-            set_bnd ( N, M, b, x );
+            set_bnd(b, x );
         }
     }
 
-    void Environment::project() {
-
+    void Environment::project( float * p, float * div ) {
+        int i, j, k;
+        float h;
+        h = 1.0f / (nx_cells - 2);
+        for (i = 1; i <= (nx_cells - 2); i++) {
+            for (j = 1; j <= (ny_cells - 2); j++) {
+                div[ID(i, j)] = -0.5f * h * (ux_p[ID(i + 1, j)] - ux_p[ID(i - 1, j)] +
+                                uy_p[ID(i, j + 1)] - uy_p[ID(i, j - 1)]);
+                p[ID(i,j)] = 0;
+            }
+        }
+        set_bnd(0, div ); set_bnd(0, p );
+        for (k = 0; k < 20; k++) {
+            for (i = 1 ; i <= (nx_cells - 2); i++ ) {
+                for (j = 1 ; j <= (ny_cells - 2); j++ ) {
+                    p[ID(i, j)] = (div[ID(i, j)] + p[ID(i - 1, j)] + p[ID(i + 1, j)] +
+                                  p[ID(i, j - 1)] + p[ID(i, j + 1)]) / 4;
+                }
+            }
+            set_bnd(0, p);
+        }
+        for (i = 1; i <= (nx_cells - 2); i++ ) {
+            for (j = 1; j<=(ny_cells - 2); j++ ) {
+                ux_p[ID(i, j)] -= 0.5 * (p[ID(i + 1, j)] - p[ID(i - 1, j)]) / h;
+                uy_p[ID(i, j)] -= 0.5 * (p[ID(i, j + 1)] - p[ID(i, j - 1)]) / h;
+            }
+        }
+        set_bnd(1, ux_p); set_bnd(2, uy_p);
     }
 
-    void Environment::advect(int N, int M, int b, float * d, float * d0, float * u, float * v, float dt ) {
-
+    void Environment::advect(int b, float * d, float * d0, float dt ) {
+        int i, j, i0, j0, i1, j1;
+        float x, y, s0, t0, s1, t1, dt0_x, dt0_y;
+        dt0_x = dt * (nx_cells - 2);
+        dt0_y = dt * (ny_cells - 2);
+        for (i = 1; i <= (nx_cells - 2); i++ ) {
+            for (j = 1; j <= (ny_cells - 2); j++ ) {
+                x = i - dt0_x * ux_p[ID(i, j)]; y = j - dt0_y * uy_p[ID(i, j)];
+                if (x < 0.5) x = 0.5; if (x > (nx_cells - 2) + 0.5) x = (nx_cells - 2) + 0.5f; i0 = (int) x; i1 = i0 + 1;
+                if (y < 0.5) y= 0.5; if (y > (ny_cells - 2) + 0.5) y = (ny_cells - 2) + 0.5f; j0 = (int) y; j1 = j0 + 1;
+                s1 = x - i0; s0 = 1 - s1; t1 = y - j0; t0 = 1 - t1;
+                d[ID(i, j)] = s0 * (t0 * d0[ID(i0, j0)] + t1 * d0[ID(i0, j1)])+
+                                                                            s1 * (t0 * d0[ID(i1, j0)] + t1 * d0[ID(i1, j1)]);
+            }
+        }
+        set_bnd (b, d);
     }
 
-    void Environment::set_bnd(int N, int M, int b, float * x) {
+    void Environment::set_bnd(int b, float * x) {
         int i;
-        for ( i=1 ; i<=N ; i++ ) {
+        int j;
+
+        // handles y-coord bound setting
+        for (i = 1; i <= (nx_cells - 2); i++) {
             if (b == 1) {
-                x[IX(0 ,i)] = –1 * x[IX(1,i)];
-                x[IX(N+1,i)] = b==1 ? –x[IX(N,i)] : x[IX(N,i)];
+                x[ID(0, i)] = x[ID(1, i)] * -1;
+                x[ID((nx_cells - 2) + 1, i)] = x[ID((nx_cells - 2), i)] * -1;
             } else {
-
-            }
-            if (b == 2) {
-
-            } else {
-                x[IX(0 ,i)] = x[IX(1,i)];
+                x[ID(0, i)] = x[ID(1, i)];
+                x[ID((nx_cells - 2) + 1, i)] = x[ID((nx_cells - 2), i)];
             }
 
-
-            x[IX(0 ,i)] = b==1 ? –x[IX(1,i)] : x[IX(1,i)];
-            x[IX(N+1,i)] = b==1 ? –x[IX(N,i)] : x[IX(N,i)];
-            x[IX(i,0 )] = b==2 ? –x[IX(i,1)] : x[IX(i,1)];
-            x[IX(i,N+1)] = b==2 ? –x[IX(i,N)] : x[IX(i,N)];
+            // converted from following
+            //x[ID(0, i)] = b == 1 ? –x[ID(1, i)] : x[ID(1, i)];
+            //x[ID(nx_cells + 1, i)] = b == 1 ? –x[ID(nx_cells, i)] : x[ID(nx_cells, i)];
         }
 
-        x[IX(0 ,0 )] = 0.5 * (x[IX(1,0 )]+x[IX(0 ,1)]);
-        x[IX(0 ,N+1)] = 0.5 * (x[IX(1,N+1)]+x[IX(0 ,N )]);
-        x[IX(N+1,0 )] = 0.5 * (x[IX(N,0 )]+x[IX(N+1,1)]);
-        x[IX(N+1,N+1)] = 0.5 * (x[IX(N,N+1)]+x[IX(N+1,N )]);
+        // handles x-coord bound setting
+        for (j = 1; j <= (ny_cells - 2); j++) {
+            if (b == 2) {
+                x[ID(j, 0)] = x[ID(j, 1)] * -1;
+                x[ID(j, (ny_cells - 2) + 1)] = x[ID(j, (ny_cells - 2))] * -1;
+            } else {
+                x[ID(j, 0)] = x[ID(j, 1)];
+                x[ID(j, (ny_cells - 2) + 1)] = x[ID(j, (ny_cells - 2))];
+            }
+
+            // converted from following
+            //x[ID(j, 0)] = b == 2 ? –x[ID(j, 1)] : x[ID(j, 1)];
+            //x[ID(j, ny_cells + 1)] = b == 2 ? –x[ID(j, ny_cells)] : x[ID(j, ny_cells)];
+        }
+
+
+        x[ID(0, 0)] = 0.5f * (x[ID(1, 0)] + x[ID(0, 1)]);
+        x[ID(0, (ny_cells - 2) + 1)] = 0.5f * (x[ID(1, (ny_cells - 2) + 1)] + x[ID(0, (ny_cells - 2))]);
+
+        x[ID((nx_cells - 2) + 1, 0)] = 0.5f * (x[ID((nx_cells - 2), 0)] + x[ID((nx_cells - 2) + 1, 1)]);
+        x[ID((nx_cells - 2) + 1, (ny_cells - 2) + 1)] = 0.5f * (x[ID((nx_cells - 2), (ny_cells - 2) + 1)] + x[ID((nx_cells - 2) + 1, (ny_cells - 2))]);
     }
 }

@@ -44,11 +44,11 @@ public:
 
     void sim_smoke();
 
-    void add_source(int N, int M, float * x, float * s, float dt);
-    void diffuse(int N, int M, int b, float * x, float * x0, float diff, float dt);
-    void project();
-    void advect(int N, int M, int b, float * d, float * d0, float * u, float * v, float dt );
-    void set_bnd(int N, int M, int b, float * x );
+    void add_source(float * x, float * s, float dt);
+    void diffuse(int b, float * x, float * x0, float diff, float dt);
+    void project(float * p, float * div);
+    void advect(int b, float * d, float * d0, float dt );
+    void set_bnd(int b, float * x );
 
     /* Keep track of some variable shere */
     size_t nx_cells;
