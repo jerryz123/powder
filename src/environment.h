@@ -17,7 +17,37 @@ public:
 
     Environment(size_t nx_cells, size_t ny_cells,
                 float cell_width, float cell_height);
+
+    // Each call to simulate involves
+    // 1. sim_particle()
+    // 2. sim_vel();
+    // 3. sim_t();
+    // 4. sim_smoke();
+
     void simulate(float delta_t, Vector3D gravity);
+
+    void sim_vel();
+
+    // Steps:
+    // 1. add_source(force)
+    // 2. diffuse
+    // 3. advect
+    // 4. project
+    void sim_temp();
+
+    // Steps:
+    // 1. add_source(force)
+    // 2. diffuse
+    // 3. advect
+    void sim_particle();
+
+    void sim_smoke();
+
+    void add_source(int N, int M, float * x, float * s, float dt);
+    void diffuse(int N, int M, int b, float * x, float * x0, float diff, float dt);
+    void project();
+    void advect(int N, int M, int b, float * d, float * d0, float * u, float * v, float dt );
+    void set_bnd(int N, int M, int b, float * x );
 
     /* Keep track of some variable shere */
     size_t nx_cells;
@@ -25,8 +55,13 @@ public:
     float cell_width;
     float cell_height;
     const float rho = 1.0;
-    vector<Cell*> u0_field;
-    vector<Cell*> u1_field;
+
+    vector<float> ux_field;
+    vector<float> uy_field;
+    vector<Vector3D> velo_field;
+    vector<float> temp_field;
+    vector<float> density_field;
+
     /* vector<Mass *> masses; */
     /* vector<Spring *> springs; */
 }; 

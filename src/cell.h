@@ -14,4 +14,5 @@ Cell(Vector3D u, float T, float phi, Vector3D pos)
     float phi;
     Vector3D pos;
 };
+
 #endif
