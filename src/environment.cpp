@@ -6,8 +6,8 @@
 
 
 #include "environment.h"
-#include "cell.h"
 #include <algorithm>
+
 
 namespace CGL {
 
@@ -18,29 +18,26 @@ namespace CGL {
         this->ny_cells = ny_cells;
         this->cell_width = cell_width;
         this->cell_height = cell_height;
-        
+
+        int n_cells = nx_cells*ny_cells;
+        this->ux = (float*)malloc(n_cells*(sizeof(float)));
+        this->uy = (float*)malloc(n_cells*(sizeof(float)));
+
+        this->ux_p = (float*)malloc(n_cells*(sizeof(float)));
+        this->uy_p = (float*)malloc(n_cells*(sizeof(float)));
+
+        this->T = (float*)malloc(n_cells*(sizeof(float)));
+        this->T_p = (float*)malloc(n_cells*(sizeof(float)));
+
         // Initialize fluid field (u_field)
         for (int y = 0; y < ny_cells; y++) {
             for (int x = 0; x < nx_cells; x++) {
-                Cell* v = new Cell(Vector3D(0.0,
-                                            0.0,
-                                            0.0),
-                                   0.0,
-                                   0.0,
-                                   Vector3D(x*cell_width,
-                                            y*cell_height,
-                                            0));
-                u0_field.push_back(v);
-                Cell* vp = new Cell(Vector3D(0.0,
-                                              0.0,
-                                              0.0),
-                                    0.0,
-                                    0.0,
-                                    Vector3D(x*cell_width,
-                                             y*cell_height,
-                                             0));
-                u1_field.push_back(vp);
-                
+                ux[ID(x, y)] = 0.0;
+                uy[ID(x, y)] = 0.0;
+                ux_p[ID(x, y)] = 0.0;
+                uy_p[ID(x, y)] = 0.0;
+                T[ID(x, y)] = 0.0;
+                T_p[ID(x, y)] = 0.0;
             }
         }
     }
@@ -51,8 +48,15 @@ namespace CGL {
 
         // Navier Stokes for u_field
         // addForce step
-        for (Cell* c : u0_field) {
-            c->u += delta_t*gravity;
+        for (int y = 0; y < ny_cells; y++) {
+            for (int x = 0; x < nx_cells; x++) {
+                ux[ID(x, y)] += 0.0001;
+                uy[ID(x, y)] += 0.0001;
+                ux_p[ID(x, y)] += 0.0001;
+                uy_p[ID(x, y)] += 0.0001;
+                T[ID(x, y)] += 0.0001;
+                T_p[ID(x, y)] += 0.0001;
+            }
         }
         // Transport step
     }

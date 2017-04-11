@@ -3,7 +3,8 @@
 
 #include "CGL/CGL.h"
 #include "CGL/vector3D.h"
-#include "cell.h"
+
+#define ID(x, y) (x + y*nx_cells)
 using namespace std;
 
 namespace CGL {
@@ -25,10 +26,13 @@ public:
     float cell_width;
     float cell_height;
     const float rho = 1.0;
-    vector<Cell*> u0_field;
-    vector<Cell*> u1_field;
-    /* vector<Mass *> masses; */
-    /* vector<Spring *> springs; */
+    float* ux;
+    float* uy;
+    float* ux_p;
+    float* uy_p;
+
+    float* T;
+    float* T_p;
 }; 
 }
 #endif 

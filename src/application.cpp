@@ -18,7 +18,7 @@ void Application::init() {
   glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
   glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
 
-  glPointSize(8);
+  glPointSize(1);
   glLineWidth(4);
 
   glColor3f(1.0, 1.0, 1.0);
@@ -30,19 +30,18 @@ void Application::init() {
 void Application::render() {
   for (int i = 0; i < config.steps_per_frame; i++) {
       // Simulate one step here
-      int a = 1;
+      env->simulate(1.0, Vector3D(0, -1, 0));
     // ropeEuler->simulateEuler(1 / config.steps_per_frame, config.gravity);
     // ropeVerlet->simulateVerlet(1 / config.steps_per_frame, config.gravity);
   }
 
   // Draw to screen here
-
+  
 
   glBegin(GL_POINTS);
   for (int y = 0; y < config.nx_cells; y++) {
       for (int x = 0; x < config.ny_cells; x++) {
-          Vector3D u = env->u0_field[y*config.nx_cells+x]->u;
-          glColor3f(u.x, u.y, u.z);
+          glColor3f(env->ux[x+y*config.nx_cells], env->uy[x+y*config.nx_cells], 0.0);
           glVertex2d(x, y);
       }
   }
