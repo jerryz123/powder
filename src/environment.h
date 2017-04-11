@@ -16,8 +16,39 @@ class Environment {
 
     Environment(size_t nx_cells, size_t ny_cells,
                 float cell_width, float cell_height);
+
+    // Each call to simulate involves
+    // 1. sim_particle()
+    // 2. sim_vel();
+    // 3. sim_t();
+    // 4. sim_smoke();
+
     void simulate(float delta_t, Vector3D gravity);
-    
+
+    void simulate_vel(float delta_t);
+
+    // Steps:
+    // 1. add_source(force)
+    // 2. diffuse
+    // 3. advect
+    // 4. project
+    void simulate_temp();
+
+    // Steps:
+    // 1. add_source(force)
+    // 2. diffuse
+    // 3. advect
+    void simulate_particle();
+
+    void simulate_smoke();
+
+    void add_source(float * x, float * s, float dt);
+    void diffuse(int b, float * x, float * x0, float diff, float dt);
+    void project(float * p, float * div);
+    void advect(int b, float * d, float * d0, float dt );
+    void set_bnd(int b, float * x );
+
+
     /* Keep track of some variable shere */
     size_t nx_cells;
     size_t ny_cells;
@@ -25,15 +56,15 @@ class Environment {
     float cell_height;
 
     const float rho = 1.0;
+
     const float visc = 1.0;
+
     float* ux;
     float* uy;
     float* ux_p;
     float* uy_p;
     float* T;
     float* T_p;
- private:
-    void simulate_vel(float delta_t);
 }; 
 }
 #endif 
