@@ -28,7 +28,7 @@ struct AppConfig {
 
     // Environment variables
       gravity = Vector3D(0, -1, 0);
-    steps_per_frame = 64;
+    steps_per_frame = 10;
     cell_width = 1.0;
     cell_height = 1.0;
     nx_cells = 500;
