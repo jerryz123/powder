@@ -22,61 +22,33 @@ void Application::init() {
   glLineWidth(4);
 
   glColor3f(1.0, 1.0, 1.0);
+  is_simulating = true;
   env = new Environment(config.nx_cells, config.ny_cells,
                         config.cell_width, config.cell_height);
 
 }
 
 void Application::render() {
-  for (int i = 0; i < config.steps_per_frame; i++) {
-      // Simulate one step here
-      env->simulate(1.0, Vector3D(0, -1, 0));
-    // ropeEuler->simulateEuler(1 / config.steps_per_frame, config.gravity);
-    // ropeVerlet->simulateVerlet(1 / config.steps_per_frame, config.gravity);
-  }
-
-  // Draw to screen here
-  
-
-  glBegin(GL_POINTS);
-  for (int y = 0; y < config.nx_cells; y++) {
-      for (int x = 0; x < config.ny_cells; x++) {
-          glColor3f(env->ux[x+y*config.nx_cells], env->uy[x+y*config.nx_cells], 0.0);
-          glVertex2d(x, y);
-      }
-  }
-  glEnd();
-  // for (int i = 0; i < 2; i++) {
-  //   if (i == 0) {
-  //     glColor3f(0.0, 0.0, 1.0);
-  //     rope = ropeEuler;
-  //   } else {
-  //     glColor3f(0.0, 1.0, 0.0);
-  //     rope = ropeVerlet;
-  //   }
-
-  //   glBegin(GL_POINTS);
-
-  //   for (auto &m : rope->masses) {
-  //     Vector2D p = m->position;
-  //     glVertex2d(p.x, p.y);
-  //   }
-
-  //   glEnd();
-
-  //   glBegin(GL_LINES);
-
-  //   for (auto &s : rope->springs) {
-  //     Vector2D p1 = s->m1->position;
-  //     Vector2D p2 = s->m2->position;
-  //     glVertex2d(p1.x, p1.y);
-  //     glVertex2d(p2.x, p2.y);
-  //   }
-
-  //   glEnd();
-
-  //   glFlush();
-  // }
+    if (is_simulating) {
+        for (int i = 0; i < config.steps_per_frame; i++) {
+            // Simulate one step here
+            env->simulate(1.0, Vector3D(0, -1, 0));
+            // ropeEuler->simulateEuler(1 / config.steps_per_frame, config.gravity);
+            // ropeVerlet->simulateVerlet(1 / config.steps_per_frame, config.gravity);
+        }
+    }
+    // Draw to screen here
+    
+    
+    glBegin(GL_POINTS);
+    for (int y = 0; y < config.nx_cells; y++) {
+        for (int x = 0; x < config.ny_cells; x++) {
+            glColor3f(env->ux[x+y*config.nx_cells], env->uy[x+y*config.nx_cells], 0.0);
+            glVertex2d(x, y);
+        }
+    }
+    glEnd();
+    glFlush();
 }
 
 void Application::resize(size_t w, size_t h) {
@@ -92,16 +64,19 @@ void Application::resize(size_t w, size_t h) {
 }
 
 void Application::keyboard_event(int key, int event, unsigned char mods) {
-  switch (key) {
-  case '-':
-    if (config.steps_per_frame > 1) {
-      config.steps_per_frame /= 2;
+    switch (key) {
+    case '-':
+        if (config.steps_per_frame > 1) {
+            config.steps_per_frame /= 2;
+        }
+        break;
+    case '=':
+        config.steps_per_frame *= 2;
+        break;
+    case 'p':
+        is_simulating = !is_simulating;
+        break;
     }
-    break;
-  case '=':
-    config.steps_per_frame *= 2;
-    break;
-  }
 }
 
 string Application::name() { return "Powder"; }

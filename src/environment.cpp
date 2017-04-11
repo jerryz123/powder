@@ -60,4 +60,19 @@ namespace CGL {
         }
         // Transport step
     }
+
+    void Environment::simulate_vel(float delta_t) {
+        // add_source(delta_t);
+        // SWAP(ux, ux_p);
+        // diffuse(1, ux, ux_p, delta_t);
+        // diffuse(2, uy, uy_p, delta_t);
+        // SWAP(ux, ux_p);
+        // SWAP(uy, uy_p);
+        // project();
+        // SWAP(ux, ux_p);
+        // SWAP(uy, uy_p);
+        // advect(1, ux, ux_p, delta_t);
+        // advect(1, uy, uy_p, delta_t);
+        // project();
+    }
 }
