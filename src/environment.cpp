@@ -35,30 +35,34 @@ namespace CGL {
                 uy[ID(x, y)] = 0.0;
                 ux_p[ID(x, y)] = 0.0;
                 uy_p[ID(x, y)] = 0.0;
-                T[ID(x, y)] = 100.0;
-                T_p[ID(x, y)] = 100.0;
+                T[ID(x, y)] = 0.0;
+                T_p[ID(x, y)] = 000.0;
             }
         }
     }
 
 
     void Environment::simulate(float delta_t, Vector3D gravity, vector<InputItem> inputs) {
-        // Update environment here
-
-        // Navier Stokes for u_field
-        // addForce step
+        memset(ux_p, 0, nx_cells*ny_cells*sizeof(float));
+        memset(uy_p, 0, nx_cells*ny_cells*sizeof(float));
+        memset(T_p, 0, nx_cells*ny_cells*sizeof(float));
+        // updates ux_p, uy_p, T_p
+        
         get_from_UI(inputs);
 
-        // Transport step
+        simulate_temp(delta_t);
     }
     void Environment::get_from_UI(vector<InputItem> inputs) {
         for (InputItem i : inputs) {
+            
             int x = (int) i.pos.x / cell_width;
             int y = (int) i.pos.y / cell_height;
-            switch (i.input_mode) {
-            case temperature:
-                T_p[ID(x, y)] += 10;
-                break;
+            if (x < nx_cells && y < ny_cells) {
+                switch (i.input_mode) {
+                case temperature:
+                    T_p[ID(x, y)] += 10000;
+                    break;
+                }
             }
         }
     }
@@ -85,8 +89,12 @@ namespace CGL {
     // 2. diffuse
     // 3. advect
     // 4. project
-    void Environment::simulate_temp() {
-
+    void Environment::simulate_temp(float delta_t) {
+        add_source(T, T_p, delta_t);
+        SWAP(T_p, T);
+        diffuse(0, T, T_p, T_diff, delta_t);
+        SWAP(T_p, T);
+        advect(0, T, T_p, delta_t);
     }
 
     // Steps:
@@ -101,9 +109,11 @@ namespace CGL {
 
     }
 
-    void Environment::add_source(float * x, float * s, float dt) {
-        int i, size = ((nx_cells - 2) + 2) * ((ny_cells - 2) + 2);
-        for (i = 0; i < size; i++ ) x[i] += dt * s[i];
+    void Environment::add_source(float * curr, float * prev, float delta_t) {
+        int i, size = nx_cells*ny_cells;
+        for (i = 0; i < size; i++ ) {
+            curr[i] += delta_t*prev[i];
+        }
     }
 
     void Environment::diffuse(int b, float * x, float * x0, float diff, float dt) {
@@ -157,12 +167,29 @@ namespace CGL {
         dt0_y = dt * (ny_cells - 2);
         for (i = 1; i <= (nx_cells - 2); i++ ) {
             for (j = 1; j <= (ny_cells - 2); j++ ) {
-                x = i - dt0_x * ux_p[ID(i, j)]; y = j - dt0_y * uy_p[ID(i, j)];
-                if (x < 0.5) x = 0.5; if (x > (nx_cells - 2) + 0.5) x = (nx_cells - 2) + 0.5f; i0 = (int) x; i1 = i0 + 1;
-                if (y < 0.5) y= 0.5; if (y > (ny_cells - 2) + 0.5) y = (ny_cells - 2) + 0.5f; j0 = (int) y; j1 = j0 + 1;
-                s1 = x - i0; s0 = 1 - s1; t1 = y - j0; t0 = 1 - t1;
-                d[ID(i, j)] = s0 * (t0 * d0[ID(i0, j0)] + t1 * d0[ID(i0, j1)])+
-                                                                            s1 * (t0 * d0[ID(i1, j0)] + t1 * d0[ID(i1, j1)]);
+                x = i - dt0_x * ux[ID(i, j)]; y = j - dt0_y * uy[ID(i, j)];
+                if (x < 0.5) {
+                    x = 0.5;
+                }
+                if (x > (nx_cells - 2) + 0.5) {
+                    x = (nx_cells - 2) + 0.5f;
+                }
+                i0 = (int) x;
+                i1 = i0 + 1;
+                if (y < 0.5) {
+                    y = 0.5;
+                }
+                if (y > (ny_cells - 2) + 0.5) {
+                    y = (ny_cells - 2) + 0.5f;
+                }
+                j0 = (int) y;
+                j1 = j0 + 1;
+                s1 = x - i0;
+                s0 = 1 - s1;
+                t1 = y - j0;
+                t0 = 1 - t1;
+                d[ID(i, j)] = s0 * (t0 * d0[ID(i0, j0)] + t1 * d0[ID(i0, j1)]) +
+                    s1 * (t0 * d0[ID(i1, j0)] + t1 * d0[ID(i1, j1)]);
             }
         }
         set_bnd (b, d);
@@ -189,7 +216,7 @@ namespace CGL {
 
         // handles x-coord bound setting
         for (j = 1; j <= (ny_cells - 2); j++) {
-            if (b == 2) {
+           if (b == 2) {
                 x[ID(j, 0)] = x[ID(j, 1)] * -1;
                 x[ID(j, (ny_cells - 2) + 1)] = x[ID(j, (ny_cells - 2))] * -1;
             } else {

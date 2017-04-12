@@ -32,9 +32,10 @@ namespace CGL {
         if (config.is_simulating) {
             for (int i = 0; i < config.steps_per_frame; i++) {
                 // Simulate one step here
-                env->simulate(1.0, config.gravity, inputs);
+                env->simulate(config.delta_t, config.gravity, inputs);
                 // ropeEuler->simulateEuler(1 / config.steps_per_frame, config.gravity);
                 // ropeVerlet->simulateVerlet(1 / config.steps_per_frame, config.gravity);
+                inputs.clear();
             }
         }
         // Draw to screen here
@@ -43,7 +44,7 @@ namespace CGL {
         glBegin(GL_POINTS);
         for (int y = 0; y < config.nx_cells; y++) {
             for (int x = 0; x < config.ny_cells; x++) {
-                float t = env->T[x+y*config.nx_cells] / 200.;
+                float t = env->T[x+y*config.nx_cells];
                 glColor3f(t, t, t);
                 glVertex2d(x, y);
             }
@@ -61,7 +62,7 @@ namespace CGL {
 
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        glOrtho(0, screen_width, 0, screen_height, 1, 0);
+        glOrtho(0, screen_width, screen_height, 0, 1, 0);
     }
 
     void Application::key_event(char key) {
@@ -83,11 +84,10 @@ namespace CGL {
     void Application::cursor_event(float x, float y, unsigned char keys) {
         int left = keys >> 2;
         if (left > 0) {
-            switch (config.input_mode) {
-            case temperature:
-                cout << "button" << endl;
-                break;
-            }
+            InputItem input;
+            input.pos = Vector2D(x, y);
+            input.input_mode = config.input_mode;
+            inputs.push_back(input);
         }
     }
 

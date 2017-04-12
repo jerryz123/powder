@@ -5,7 +5,7 @@
 #include "CGL/vector3D.h"
 
 #define SWAP(x0,x) {float *tmp=x0;x0=x;x=tmp;}
-#define ID(x, y) (x + y*nx_cells)
+#define ID(x, y) ((x) + (y)*nx_cells)
 
 using namespace std;
 
@@ -39,7 +39,7 @@ class Environment {
     const float rho = 1.0;
 
     const float visc = 1.0;
-
+    const float T_diff = 0.01;
     float* ux;
     float* uy;
     float* ux_p;
@@ -58,7 +58,7 @@ class Environment {
     // 2. diffuse
     // 3. advect
     // 4. project
-    void simulate_temp();
+    void simulate_temp(float delta_t);
 
     // Steps:
     // 1. add_source(force)
@@ -68,7 +68,7 @@ class Environment {
 
     void simulate_smoke();
     void get_from_UI(vector<InputItem> inputs);
-    void add_source(float * x, float * s, float dt);
+    void add_source(float * curr, float * prev, float delta_t);
     void diffuse(int b, float * x, float * x0, float diff, float dt);
     void project(float * p, float * div);
     void advect(int b, float * d, float * d0, float dt );

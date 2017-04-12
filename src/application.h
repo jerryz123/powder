@@ -27,13 +27,14 @@ namespace CGL {
 
             // Environment variables
             gravity = Vector3D(0, -1, 0);
-            steps_per_frame = 10;
+            steps_per_frame = 1;
             cell_width = 1.0;
             cell_height = 1.0;
             nx_cells = 500;
             ny_cells = 500;
             is_simulating = true;
             input_mode = temperature;
+            delta_t = 0.001;
 
         }
 
@@ -42,6 +43,7 @@ namespace CGL {
         size_t nx_cells;
         size_t ny_cells;
         float steps_per_frame;
+        float delta_t;
         float cell_width;
         float cell_height;
         Vector3D gravity;
