@@ -18,64 +18,72 @@
 using namespace std;
 
 namespace CGL {
-
-struct AppConfig {
-  AppConfig() {
-      // Assign globla vars here
-    /* // Rope config variables */
-    /* mass = 1; */
-    /* ks = 100; */
-
-    // Environment variables
-      gravity = Vector3D(0, -1, 0);
-      steps_per_frame = 10;
-      cell_width = 1.0;
-      cell_height = 1.0;
-      nx_cells = 500;
-      ny_cells = 500;
-  }
-
-    /* Define global vars here */
-  /* float mass; */
-  /* float ks; */
-    size_t nx_cells;
-    size_t ny_cells;
-    float steps_per_frame;
-    float cell_width;
-    float cell_height;
-    Vector3D gravity;
-};
-
-class Application : public Renderer {
-public:
-  Application(AppConfig config);
-  ~Application();
-
-  void init();
-  void render();
-  void resize(size_t w, size_t h);
-
-  std::string name();
-  std::string info();
-
-  void key_event(char key);
-  // void cursor_event(float x, float y);
-  // void scroll_event(float offset_x, float offset_y);
-  // void mouse_event(int key, int event, unsigned char mods);
-
-private:
-  AppConfig config;
-
-  /* Track environment here */
-  /* Rope *ropeEuler; */
-  /* Rope *ropeVerlet; */
-  bool is_simulating;
-  size_t screen_width;
-  size_t screen_height;
-  Environment* env;
-
-}; // class Application
-
+    enum InputMode {
+        temperature
+    };
+    struct AppConfig {
+        AppConfig() {
+            // Assign globla vars here
+            /* // Rope config variables */
+            /* mass = 1; */
+            /* ks = 100; */
+            
+            // Environment variables
+            gravity = Vector3D(0, -1, 0);
+            steps_per_frame = 10;
+            cell_width = 1.0;
+            cell_height = 1.0;
+            nx_cells = 500;
+            ny_cells = 500;
+            is_simulating = true;
+            input_mode = temperature;
+        }
+        
+        /* Define global vars here */
+        bool is_simulating;
+        size_t nx_cells;
+        size_t ny_cells;
+        float steps_per_frame;
+        float cell_width;
+        float cell_height;
+        Vector3D gravity;
+        InputMode input_mode;
+        
+    };
+    
+    class Application : public Renderer {
+    public:
+        Application(AppConfig config);
+        ~Application();
+        
+        void init();
+        void render();
+        void resize(size_t w, size_t h);
+        
+        std::string name();
+        std::string info();
+        
+        void key_event(char key);
+        // void cursor_event(float x, float y);
+        // void scroll_event(float offset_x, float offset_y);
+        void cursor_event(float x, float y, unsigned char keys);
+        
+    private:
+        AppConfig config;
+        
+        /* Track environment here */
+        /* Rope *ropeEuler; */
+        /* Rope *ropeVerlet; */
+        bool is_simulating;
+        size_t screen_width;
+        size_t screen_height;
+        Environment* env;
+        
+        
+        
+        
+    }; // class Application
+    
 } // namespace CGL
 
 #endif // CGL_APPLICATION_H
