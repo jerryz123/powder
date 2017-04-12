@@ -18,16 +18,13 @@
 using namespace std;
 
 namespace CGL {
-    enum InputMode {
-        temperature
-    };
     struct AppConfig {
         AppConfig() {
             // Assign globla vars here
             /* // Rope config variables */
             /* mass = 1; */
             /* ks = 100; */
-            
+
             // Environment variables
             gravity = Vector3D(0, -1, 0);
             steps_per_frame = 10;
@@ -37,8 +34,9 @@ namespace CGL {
             ny_cells = 500;
             is_simulating = true;
             input_mode = temperature;
+
         }
-        
+
         /* Define global vars here */
         bool is_simulating;
         size_t nx_cells;
@@ -48,29 +46,29 @@ namespace CGL {
         float cell_height;
         Vector3D gravity;
         InputMode input_mode;
-        
+
     };
-    
+
     class Application : public Renderer {
     public:
         Application(AppConfig config);
         ~Application();
-        
+
         void init();
         void render();
         void resize(size_t w, size_t h);
-        
+
         std::string name();
         std::string info();
-        
+
         void key_event(char key);
         // void cursor_event(float x, float y);
         // void scroll_event(float offset_x, float offset_y);
         void cursor_event(float x, float y, unsigned char keys);
-        
+
     private:
         AppConfig config;
-        
+
         /* Track environment here */
         /* Rope *ropeEuler; */
         /* Rope *ropeVerlet; */
@@ -78,12 +76,12 @@ namespace CGL {
         size_t screen_width;
         size_t screen_height;
         Environment* env;
-        
-        
-        
-        
+        vector<InputItem> inputs;
+
+
+
     }; // class Application
-    
+
 } // namespace CGL
 
 #endif // CGL_APPLICATION_H

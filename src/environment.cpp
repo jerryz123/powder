@@ -42,13 +42,25 @@ namespace CGL {
     }
 
 
-    void Environment::simulate(float delta_t, Vector3D gravity) {
+    void Environment::simulate(float delta_t, Vector3D gravity, vector<InputItem> inputs) {
         // Update environment here
 
         // Navier Stokes for u_field
         // addForce step
+        get_from_UI(inputs);
 
         // Transport step
+    }
+    void Environment::get_from_UI(vector<InputItem> inputs) {
+        for (InputItem i : inputs) {
+            int x = (int) i.pos.x / cell_width;
+            int y = (int) i.pos.y / cell_height;
+            switch (i.input_mode) {
+            case temperature:
+                T_p[ID(x, y)] += 10;
+                break;
+            }
+        }
     }
 
 

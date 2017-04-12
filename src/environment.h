@@ -11,6 +11,14 @@ using namespace std;
 
 namespace CGL {
 
+    enum InputMode {
+        temperature
+    };
+    struct InputItem {
+        Vector2D pos;
+        InputMode input_mode;
+    };
+
 class Environment {
  public:
 
@@ -23,7 +31,25 @@ class Environment {
     // 3. sim_t();
     // 4. sim_smoke();
 
-    void simulate(float delta_t, Vector3D gravity);
+        size_t nx_cells;
+    size_t ny_cells;
+    float cell_width;
+    float cell_height;
+
+    const float rho = 1.0;
+
+    const float visc = 1.0;
+
+    float* ux;
+    float* uy;
+    float* ux_p;
+    float* uy_p;
+    float* T;
+    float* T_p;
+
+
+
+    void simulate(float delta_t, Vector3D gravity, vector<InputItem> inputs);
 
     void simulate_vel(float delta_t);
 
@@ -41,7 +67,7 @@ class Environment {
     void simulate_particle();
 
     void simulate_smoke();
-
+    void get_from_UI(vector<InputItem> inputs);
     void add_source(float * x, float * s, float dt);
     void diffuse(int b, float * x, float * x0, float diff, float dt);
     void project(float * p, float * div);
@@ -49,22 +75,6 @@ class Environment {
     void set_bnd(int b, float * x );
 
 
-    /* Keep track of some variable shere */
-    size_t nx_cells;
-    size_t ny_cells;
-    float cell_width;
-    float cell_height;
-
-    const float rho = 1.0;
-
-    const float visc = 1.0;
-
-    float* ux;
-    float* uy;
-    float* ux_p;
-    float* uy_p;
-    float* T;
-    float* T_p;
 }; 
 }
 #endif 

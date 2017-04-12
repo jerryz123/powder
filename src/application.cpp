@@ -32,7 +32,7 @@ namespace CGL {
         if (config.is_simulating) {
             for (int i = 0; i < config.steps_per_frame; i++) {
                 // Simulate one step here
-                env->simulate(1.0, config.gravity);
+                env->simulate(1.0, config.gravity, inputs);
                 // ropeEuler->simulateEuler(1 / config.steps_per_frame, config.gravity);
                 // ropeVerlet->simulateVerlet(1 / config.steps_per_frame, config.gravity);
             }
