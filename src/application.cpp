@@ -63,7 +63,7 @@ void Application::resize(size_t w, size_t h) {
   glOrtho(0, screen_width, 0, screen_height, 1, 0);
 }
 
-void Application::keyboard_event(int key, int event, unsigned char mods) {
+void Application::key_event(char key) {
     switch (key) {
     case '-':
         if (config.steps_per_frame > 1) {
