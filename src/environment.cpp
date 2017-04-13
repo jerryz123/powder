@@ -39,18 +39,22 @@ namespace CGL {
                 T_p[ID(x, y)] = 000.0;
             }
         }
+
         T[ID(nx_cells / 2, ny_cells / 2 )] = 1500;
+
 //        for (int x = 0; x < nx_cells; x += 25) {
 //            for (int y = 0; y < ny_cells; y += 25) {
 //                T[ID(x, y)] += 500;
 //            }
 //        }
+
         for (int y = 50; y < 150; y++) {
             for (int x = 100; x < 200; x++) {
                 ux[ID(x, y)] = 10;
                 uy[ID(x, y)] = -54;
             }
         }
+
         for (int y = 90; y < 150; y++) {
             for (int x = 250; x < 350; x++) {
                 ux[ID(x, y)] = 0;
