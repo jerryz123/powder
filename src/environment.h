@@ -60,6 +60,7 @@ class Environment {
     // 3. advect
     // 4. project
     void simulate_temp(float delta_t);
+    void temp_decay(float * T, float delta_t);
 
     // Steps:
     // 1. add_source(force)
@@ -70,9 +71,9 @@ class Environment {
     void simulate_smoke();
     void get_from_UI(float delta_t, Vector3D gravity, vector<InputItem> inputs);
     void add_source(float * curr, float * prev, float delta_t);
-    void diffuse(int b, float * x, float * x0, float diff, float dt);
+    void diffuse(int b, float * x, float * x0, float diff, float dt, bool isTemp);
     void project();
-    void advect(int b, float * d, float * d0, float* u, float* v, float dt );
+    void advect(int b, float * d, float * d0, float* u, float* v, float dt, bool isTemp);
     void set_bnd(int b, float * x );
 
 

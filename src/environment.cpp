@@ -39,11 +39,12 @@ namespace CGL {
                 T_p[ID(x, y)] = 000.0;
             }
         }
-        for (int x = 0; x < nx_cells; x += 25) {
-            for (int y = 0; y < ny_cells; y += 25) {
-                T[ID(x, y)] += 100;
-            }
-        }
+        T[ID(nx_cells / 2, ny_cells / 2 )] = 1500;
+//        for (int x = 0; x < nx_cells; x += 25) {
+//            for (int y = 0; y < ny_cells; y += 25) {
+//                T[ID(x, y)] += 500;
+//            }
+//        }
         for (int y = 50; y < 150; y++) {
             for (int x = 100; x < 200; x++) {
                 ux[ID(x, y)] = 10;
@@ -92,8 +93,8 @@ namespace CGL {
         project();
         SWAP(ux, ux_p);
         SWAP(uy, uy_p);
-        advect(1, ux, ux_p, ux_p, uy_p, delta_t);
-        advect(1, uy, uy_p, ux_p, uy_p, delta_t);
+        advect(1, ux, ux_p, ux_p, uy_p, delta_t, false);
+        advect(1, uy, uy_p, ux_p, uy_p, delta_t, false);
         project();
 
     }
@@ -107,9 +108,27 @@ namespace CGL {
     void Environment::simulate_temp(float delta_t) {
         add_source(T, T_p, delta_t);
         SWAP(T_p, T);
-        diffuse(0, T, T_p, T_diff, delta_t);
+        diffuse(0, T, T_p, T_diff, delta_t, true);
         SWAP(T_p, T);
-        advect(0, T, T_p, ux, uy, delta_t);
+        advect(0, T, T_p, ux, uy, delta_t, true);
+        temp_decay(T, delta_t);
+    }
+
+    void Environment::temp_decay(float * T, float delta_t) {
+        // need to play with constant
+        float k = 500;
+        for (int i = 1; i <= (nx_cells - 2); i++) {
+            for (int j = 1; j <= (ny_cells - 2);j++) {
+                // calculates surrounding heat by averaging neighboring temperatures
+                // can also try randomly sampling a direction
+                float surround_temp =
+                        (T[ID(i, j + 1)] + T[ID(i, j - 1)] + T[ID(i + 1, j)] +
+                         T[ID(i - 1, j)]) / 4.0f;
+
+                // Newton's law of cooling
+                T[ID(i, j)] = min(T[ID(i, j)], (1 - delta_t) * surround_temp + (T[ID(i, j)] - surround_temp) * exp(-k * delta_t));
+            }
+        }
     }
 
     // Steps:
@@ -131,7 +150,7 @@ namespace CGL {
         }
     }
 
-    void Environment::diffuse(int b, float * x, float * x0, float diff, float dt) {
+    void Environment::diffuse(int b, float * x, float * x0, float diff, float dt, bool isTemp) {
         int i, j, k;
         float a = dt * diff * (nx_cells - 2) * (ny_cells - 2);
         for (k = 0; k < 10; k++ ) {
@@ -141,7 +160,11 @@ namespace CGL {
                                                    x[ID(i, j - 1)] + x[ID(i, j + 1)])) / (1 + 4 * a);
                 }
             }
-            set_bnd(b, x );
+
+            // does not apply boundary conditions for temperature
+            if (!isTemp) {
+                set_bnd(b, x);
+            }
         }
     }
 
@@ -178,7 +201,7 @@ namespace CGL {
         set_bnd(1, ux); set_bnd(2, uy);
     }
 
-    void Environment::advect(int b, float * d, float * d0, float* u, float* v, float dt ) {
+    void Environment::advect(int b, float * d, float * d0, float* u, float* v, float dt, bool isTemp) {
         int i, j, i0, j0, i1, j1;
         float x, y, s0, t0, s1, t1, dt0_x, dt0_y;
         dt0_x = dt * (nx_cells - 2);
@@ -211,7 +234,11 @@ namespace CGL {
                     s1 * (t0 * d0[ID(i1, j0)] + t1 * d0[ID(i1, j1)]);
             }
         }
-        set_bnd (b, d);
+
+        // does not apply boundary conditions for temperature
+        if (!isTemp) {
+            set_bnd(b, d);
+        }
     }
 
     void Environment::set_bnd(int b, float * x) {
