@@ -39,7 +39,8 @@ class Environment {
     const float rho = 1.0;
 
     const float visc = 1.0;
-    const float T_diff = 0.01;
+    const float T_diff = 0.001;
+    const float u_diff = 0;
     float* ux;
     float* uy;
     float* ux_p;
@@ -67,11 +68,11 @@ class Environment {
     void simulate_particle();
 
     void simulate_smoke();
-    void get_from_UI(vector<InputItem> inputs);
+    void get_from_UI(float delta_t, Vector3D gravity, vector<InputItem> inputs);
     void add_source(float * curr, float * prev, float delta_t);
     void diffuse(int b, float * x, float * x0, float diff, float dt);
-    void project(float * p, float * div);
-    void advect(int b, float * d, float * d0, float dt );
+    void project();
+    void advect(int b, float * d, float * d0, float* u, float* v, float dt );
     void set_bnd(int b, float * x );
 
 

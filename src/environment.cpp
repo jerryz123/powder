@@ -31,36 +31,54 @@ namespace CGL {
         // Initialize fluid field (u_field)
         for (int y = 0; y < ny_cells; y++) {
             for (int x = 0; x < nx_cells; x++) {
-                ux[ID(x, y)] = 0.0;
-                uy[ID(x, y)] = 0.0;
+                ux[ID(x, y)] = 10. * (rand() / (double) RAND_MAX - 0.5);
+                uy[ID(x, y)] = 10. * (rand() / (double) RAND_MAX - 0.5);
                 ux_p[ID(x, y)] = 0.0;
                 uy_p[ID(x, y)] = 0.0;
                 T[ID(x, y)] = 0.0;
                 T_p[ID(x, y)] = 000.0;
             }
         }
+        for (int x = 0; x < nx_cells; x += 25) {
+            for (int y = 0; y < ny_cells; y += 25) {
+                T[ID(x, y)] += 100;
+            }
+        }
+        for (int y = 50; y < 150; y++) {
+            for (int x = 100; x < 200; x++) {
+                ux[ID(x, y)] = 10;
+                uy[ID(x, y)] = -54;
+            }
+        }
+        for (int y = 90; y < 150; y++) {
+            for (int x = 250; x < 350; x++) {
+                ux[ID(x, y)] = 0;
+                uy[ID(x, y)] = 34;
+            }
+        }
     }
 
 
     void Environment::simulate(float delta_t, Vector3D gravity, vector<InputItem> inputs) {
-        memset(ux_p, 0, nx_cells*ny_cells*sizeof(float));
-        memset(uy_p, 0, nx_cells*ny_cells*sizeof(float));
-        memset(T_p, 0, nx_cells*ny_cells*sizeof(float));
-        // updates ux_p, uy_p, T_p
+        // memset(ux_p, 0, nx_cells*ny_cells*sizeof(float));
+        // memset(uy_p, 0, nx_cells*ny_cells*sizeof(float));
+        // memset(T_p, 0, nx_cells*ny_cells*sizeof(float));
+        // updates ux_p, uy_p, T_p from inputs and gravity
         
-        get_from_UI(inputs);
+        get_from_UI(delta_t, gravity, inputs);
 
+        simulate_vel(delta_t);
         simulate_temp(delta_t);
     }
-    void Environment::get_from_UI(vector<InputItem> inputs) {
+    void Environment::get_from_UI(float delta_t, Vector3D gravity, vector<InputItem> inputs) {
+
         for (InputItem i : inputs) {
-            
             int x = (int) i.pos.x / cell_width;
             int y = (int) i.pos.y / cell_height;
             if (x < nx_cells && y < ny_cells) {
                 switch (i.input_mode) {
                 case temperature:
-                    T_p[ID(x, y)] += 10000;
+                    T_p[ID(x, y)] += 1000;
                     break;
                 }
             }
@@ -69,18 +87,15 @@ namespace CGL {
 
 
     void Environment::simulate_vel(float delta_t) {
-        // add_source(delta_t);
-        // SWAP(ux, ux_p);
-        // diffuse(1, ux, ux_p, delta_t);
-        // diffuse(2, uy, uy_p, delta_t);
-        // SWAP(ux, ux_p);
-        // SWAP(uy, uy_p);
-        // project();
-        // SWAP(ux, ux_p);
-        // SWAP(uy, uy_p);
-        // advect(1, ux, ux_p, delta_t);
-        // advect(1, uy, uy_p, delta_t);
-        // project();
+        add_source(ux, ux_p, delta_t);
+        add_source(uy, uy_p, delta_t);
+        project();
+        SWAP(ux, ux_p);
+        SWAP(uy, uy_p);
+        advect(1, ux, ux_p, ux_p, uy_p, delta_t);
+        advect(1, uy, uy_p, ux_p, uy_p, delta_t);
+        project();
+
     }
 
 
@@ -94,7 +109,7 @@ namespace CGL {
         SWAP(T_p, T);
         diffuse(0, T, T_p, T_diff, delta_t);
         SWAP(T_p, T);
-        advect(0, T, T_p, delta_t);
+        advect(0, T, T_p, ux, uy, delta_t);
     }
 
     // Steps:
@@ -119,7 +134,7 @@ namespace CGL {
     void Environment::diffuse(int b, float * x, float * x0, float diff, float dt) {
         int i, j, k;
         float a = dt * diff * (nx_cells - 2) * (ny_cells - 2);
-        for (k = 0; k < 20; k++ ) {
+        for (k = 0; k < 10; k++ ) {
             for (i = 1; i <= (nx_cells - 2); i++ ) {
                 for (j = 1; j <= (ny_cells - 2); j++ ) {
                     x[ID(i, j)] = (x0[ID(i, j)] + a * (x[ID(i - 1, j)] + x[ID(i + 1, j)] +
@@ -130,14 +145,16 @@ namespace CGL {
         }
     }
 
-    void Environment::project( float * p, float * div ) {
+    void Environment::project() {
         int i, j, k;
         float h;
-        h = 1.0f / (nx_cells - 2);
+        float* p = ux_p;
+        float* div = uy_p;
+        h = cell_width;
         for (i = 1; i <= (nx_cells - 2); i++) {
             for (j = 1; j <= (ny_cells - 2); j++) {
-                div[ID(i, j)] = -0.5f * h * (ux_p[ID(i + 1, j)] - ux_p[ID(i - 1, j)] +
-                                uy_p[ID(i, j + 1)] - uy_p[ID(i, j - 1)]);
+                div[ID(i, j)] = -0.5f * h * (ux[ID(i + 1, j)] - ux[ID(i - 1, j)] +
+                                uy[ID(i, j + 1)] - uy[ID(i, j - 1)]);
                 p[ID(i,j)] = 0;
             }
         }
@@ -151,23 +168,25 @@ namespace CGL {
             }
             set_bnd(0, p);
         }
+
         for (i = 1; i <= (nx_cells - 2); i++ ) {
             for (j = 1; j<=(ny_cells - 2); j++ ) {
-                ux_p[ID(i, j)] -= 0.5 * (p[ID(i + 1, j)] - p[ID(i - 1, j)]) / h;
-                uy_p[ID(i, j)] -= 0.5 * (p[ID(i, j + 1)] - p[ID(i, j - 1)]) / h;
+                ux[ID(i, j)] -= 0.5 * (p[ID(i + 1, j)] - p[ID(i - 1, j)]) / h;
+                uy[ID(i, j)] -= 0.5 * (p[ID(i, j + 1)] - p[ID(i, j - 1)]) / h;
             }
         }
-        set_bnd(1, ux_p); set_bnd(2, uy_p);
+        set_bnd(1, ux); set_bnd(2, uy);
     }
 
-    void Environment::advect(int b, float * d, float * d0, float dt ) {
+    void Environment::advect(int b, float * d, float * d0, float* u, float* v, float dt ) {
         int i, j, i0, j0, i1, j1;
         float x, y, s0, t0, s1, t1, dt0_x, dt0_y;
         dt0_x = dt * (nx_cells - 2);
         dt0_y = dt * (ny_cells - 2);
         for (i = 1; i <= (nx_cells - 2); i++ ) {
             for (j = 1; j <= (ny_cells - 2); j++ ) {
-                x = i - dt0_x * ux[ID(i, j)]; y = j - dt0_y * uy[ID(i, j)];
+                x = i - dt0_x * u[ID(i, j)];
+                y = j - dt0_y * v[ID(i, j)];
                 if (x < 0.5) {
                     x = 0.5;
                 }
@@ -200,7 +219,7 @@ namespace CGL {
         int j;
 
         // handles y-coord bound setting
-        for (i = 1; i <= (nx_cells - 2); i++) {
+        for (i = 1; i <= (ny_cells - 2); i++) {
             if (b == 1) {
                 x[ID(0, i)] = x[ID(1, i)] * -1;
                 x[ID((nx_cells - 2) + 1, i)] = x[ID((nx_cells - 2), i)] * -1;
@@ -215,7 +234,7 @@ namespace CGL {
         }
 
         // handles x-coord bound setting
-        for (j = 1; j <= (ny_cells - 2); j++) {
+        for (j = 1; j <= (nx_cells - 2); j++) {
            if (b == 2) {
                 x[ID(j, 0)] = x[ID(j, 1)] * -1;
                 x[ID(j, (ny_cells - 2) + 1)] = x[ID(j, (ny_cells - 2))] * -1;

@@ -42,8 +42,8 @@ namespace CGL {
 
 
         glBegin(GL_POINTS);
-        for (int y = 0; y < config.nx_cells; y++) {
-            for (int x = 0; x < config.ny_cells; x++) {
+        for (int y = 0; y < config.ny_cells; y++) {
+            for (int x = 0; x < config.nx_cells; x++) {
                 float t = env->T[x+y*config.nx_cells];
                 glColor3f(t, t, t);
                 glVertex2d(x, y);
