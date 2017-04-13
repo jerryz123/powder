@@ -67,7 +67,7 @@ class Environment {
     // 2. diffuse
     // 3. advect
     void simulate_particle();
-
+    void thermal_buoyancy(float* f, float delta_t);
     void simulate_smoke();
     void get_from_UI(float delta_t, Vector3D gravity, vector<InputItem> inputs);
     void add_source(float * curr, float * prev, float delta_t);

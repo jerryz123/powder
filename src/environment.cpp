@@ -37,30 +37,31 @@ namespace CGL {
             for (int x = 0; x < nx_cells; x++) {
                 ux[ID(x, y)] = 10. * (rand() / (double) RAND_MAX - 0.5);
                 uy[ID(x, y)] = 10. * (rand() / (double) RAND_MAX - 0.5);
+
                 ux_p[ID(x, y)] = 0.0;
                 uy_p[ID(x, y)] = 0.0;
                 T[ID(x, y)] = 0.0;
                 T_p[ID(x, y)] = 000.0;
             }
         }
-
+        T[ID(200, 200)] += 500;
        for (int x = 0; x < nx_cells; x += 50) {
            for (int y = 0; y < ny_cells; y += 50) {
-               T[ID(x, y)] += 250;
+               T[ID(x, y)] += 500;
            }
        }
-        for (int y = 50; y < 150; y++) {
-            for (int x = 100; x < 200; x++) {
-                ux[ID(x, y)] = 34;
-                uy[ID(x, y)] = -20;
-            }
-        }
-        for (int y = 90; y < 150; y++) {
-            for (int x = 250; x < 350; x++) {
-                ux[ID(x, y)] = 0;
-                uy[ID(x, y)] = 70;
-            }
-        }
+        // for (int y = 50; y < 150; y++) {
+        //     for (int x = 100; x < 200; x++) {
+        //         ux[ID(x, y)] = 34;
+        //         uy[ID(x, y)] = -20;
+        //     }
+        // }
+        // for (int y = 90; y < 150; y++) {
+        //     for (int x = 250; x < 350; x++) {
+        //         ux[ID(x, y)] = 0;
+        //         uy[ID(x, y)] = 70;
+        //     }
+        // }
     }
 
 
@@ -71,7 +72,7 @@ namespace CGL {
         // updates ux_p, uy_p, T_p from inputs and gravity
         
         get_from_UI(delta_t, gravity, inputs);
-
+        thermal_buoyancy(uy_p, delta_t);
         simulate_vel(delta_t);
         simulate_temp(delta_t);
     }
@@ -101,6 +102,18 @@ namespace CGL {
         advect(1, uy, uy_p, ux_p, uy_p, delta_t, false);
         project();
 
+    }
+    void Environment::thermal_buoyancy(float* f, float delta_t) {
+        #pragma omp parallel for
+        for (int j = 2; j < ny_cells - 1; j++) {
+            for (int i = 1; i < nx_cells - 1; i++) {
+                float T_here = T[ID(i, j)];
+                float T_above = T[ID(i, j - 1)];
+                if (T_above < T_here) {
+                    f[ID(i, j)] -= 2000.*(T_here - T_above);
+                }
+            }
+        }
     }
 
 
