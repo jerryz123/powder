@@ -7,6 +7,7 @@
 
 #include "environment.h"
 #include <algorithm>
+#include <omp.h>
 
 namespace CGL {
 
@@ -29,38 +30,38 @@ namespace CGL {
         this->T_p = (float*)malloc(n_cells*(sizeof(float)));
 
         // Initialize fluid field (u_field)
+        
+
+        #pragma omp parallel for
         for (int y = 0; y < ny_cells; y++) {
             for (int x = 0; x < nx_cells; x++) {
                 ux[ID(x, y)] = 10. * (rand() / (double) RAND_MAX - 0.5);
                 uy[ID(x, y)] = 10. * (rand() / (double) RAND_MAX - 0.5);
+
                 ux_p[ID(x, y)] = 0.0;
                 uy_p[ID(x, y)] = 0.0;
                 T[ID(x, y)] = 0.0;
                 T_p[ID(x, y)] = 000.0;
             }
         }
-
-        T[ID(nx_cells / 2, ny_cells / 2 )] = 1500;
-
-//        for (int x = 0; x < nx_cells; x += 25) {
-//            for (int y = 0; y < ny_cells; y += 25) {
-//                T[ID(x, y)] += 500;
-//            }
-//        }
-
-        for (int y = 50; y < 150; y++) {
-            for (int x = 100; x < 200; x++) {
-                ux[ID(x, y)] = 10;
-                uy[ID(x, y)] = -54;
-            }
-        }
-
-        for (int y = 90; y < 150; y++) {
-            for (int x = 250; x < 350; x++) {
-                ux[ID(x, y)] = 0;
-                uy[ID(x, y)] = 34;
-            }
-        }
+       T[ID(200, 200)] += 500;
+       for (int x = 0; x < nx_cells; x += 50) {
+           for (int y = 0; y < ny_cells; y += 50) {
+               T[ID(x, y)] += 500;
+           }
+       }
+        // for (int y = 50; y < 150; y++) {
+        //     for (int x = 100; x < 200; x++) {
+        //         ux[ID(x, y)] = 34;
+        //         uy[ID(x, y)] = -20;
+        //     }
+        // }
+        // for (int y = 90; y < 150; y++) {
+        //     for (int x = 250; x < 350; x++) {
+        //         ux[ID(x, y)] = 0;
+        //         uy[ID(x, y)] = 70;
+        //     }
+        // }
     }
 
 
@@ -71,7 +72,7 @@ namespace CGL {
         // updates ux_p, uy_p, T_p from inputs and gravity
         
         get_from_UI(delta_t, gravity, inputs);
-
+        thermal_buoyancy(uy_p, delta_t);
         simulate_vel(delta_t);
         simulate_temp(delta_t);
     }
@@ -102,6 +103,18 @@ namespace CGL {
         project();
 
     }
+    void Environment::thermal_buoyancy(float* f, float delta_t) {
+        #pragma omp parallel for
+        for (int j = 2; j < ny_cells - 1; j++) {
+            for (int i = 1; i < nx_cells - 1; i++) {
+                float T_here = T[ID(i, j)];
+                float T_above = T[ID(i, j - 1)];
+                if (T_above < T_here) {
+                    f[ID(i, j)] -= 2000.*(T_here - T_above);
+                }
+            }
+        }
+    }
 
 
     // Steps:
@@ -121,8 +134,10 @@ namespace CGL {
     void Environment::temp_decay(float * T, float delta_t) {
         // need to play with constant
         float k = 500;
-        for (int i = 1; i <= (nx_cells - 2); i++) {
-            for (int j = 1; j <= (ny_cells - 2);j++) {
+        #pragma omp parallel for
+        for (int j = 1; j <= (ny_cells - 2);j++) {
+            for (int i = 1; i <= (nx_cells - 2); i++) {
+
                 // calculates surrounding heat by averaging neighboring temperatures
                 // can also try randomly sampling a direction
                 float surround_temp =
@@ -130,7 +145,8 @@ namespace CGL {
                          T[ID(i - 1, j)]) / 4.0f;
 
                 // Newton's law of cooling
-                T[ID(i, j)] = min(T[ID(i, j)], (1 - delta_t) * surround_temp + (T[ID(i, j)] - surround_temp) * exp(-k * delta_t));
+                T[ID(i, j)] = min(T[ID(i, j)],
+                                  (1 - delta_t) * surround_temp + (T[ID(i, j)] - surround_temp) * exp(-k * delta_t));
             }
         }
     }
@@ -158,8 +174,10 @@ namespace CGL {
         int i, j, k;
         float a = dt * diff * (nx_cells - 2) * (ny_cells - 2);
         for (k = 0; k < 10; k++ ) {
-            for (i = 1; i <= (nx_cells - 2); i++ ) {
-                for (j = 1; j <= (ny_cells - 2); j++ ) {
+            #pragma omp parallel for
+            for (j = 1; j <= (ny_cells - 2); j++ ) {
+                for (i = 1; i <= (nx_cells - 2); i++ ) {
+
                     x[ID(i, j)] = (x0[ID(i, j)] + a * (x[ID(i - 1, j)] + x[ID(i + 1, j)] +
                                                    x[ID(i, j - 1)] + x[ID(i, j + 1)])) / (1 + 4 * a);
                 }
@@ -178,8 +196,10 @@ namespace CGL {
         float* p = ux_p;
         float* div = uy_p;
         h = cell_width;
-        for (i = 1; i <= (nx_cells - 2); i++) {
-            for (j = 1; j <= (ny_cells - 2); j++) {
+        #pragma omp parallel for
+        for (j = 1; j <= (ny_cells - 2); j++) {
+            for (i = 1; i <= (nx_cells - 2); i++) {
+
                 div[ID(i, j)] = -0.5f * h * (ux[ID(i + 1, j)] - ux[ID(i - 1, j)] +
                                 uy[ID(i, j + 1)] - uy[ID(i, j - 1)]);
                 p[ID(i,j)] = 0;
@@ -187,17 +207,20 @@ namespace CGL {
         }
         set_bnd(0, div ); set_bnd(0, p );
         for (k = 0; k < 20; k++) {
-            for (i = 1 ; i <= (nx_cells - 2); i++ ) {
-                for (j = 1 ; j <= (ny_cells - 2); j++ ) {
+#pragma omp parallel for schedule(dynamic, 4)
+            for (j = 1 ; j <= (ny_cells - 2); j++ ) {
+                for (i = 1 ; i <= (nx_cells - 2); i++ ) {
+
                     p[ID(i, j)] = (div[ID(i, j)] + p[ID(i - 1, j)] + p[ID(i + 1, j)] +
                                   p[ID(i, j - 1)] + p[ID(i, j + 1)]) / 4;
                 }
             }
             set_bnd(0, p);
         }
+        #pragma omp parallel for
+        for (j = 1; j<=(ny_cells - 2); j++ ) {
+            for (i = 1; i <= (nx_cells - 2); i++ ) {
 
-        for (i = 1; i <= (nx_cells - 2); i++ ) {
-            for (j = 1; j<=(ny_cells - 2); j++ ) {
                 ux[ID(i, j)] -= 0.5 * (p[ID(i + 1, j)] - p[ID(i - 1, j)]) / h;
                 uy[ID(i, j)] -= 0.5 * (p[ID(i, j + 1)] - p[ID(i, j - 1)]) / h;
             }
@@ -210,8 +233,10 @@ namespace CGL {
         float x, y, s0, t0, s1, t1, dt0_x, dt0_y;
         dt0_x = dt * (nx_cells - 2);
         dt0_y = dt * (ny_cells - 2);
-        for (i = 1; i <= (nx_cells - 2); i++ ) {
-            for (j = 1; j <= (ny_cells - 2); j++ ) {
+#pragma omp parallel for schedule(dynamic, 3)
+        for (j = 1; j <= (ny_cells - 2); j++ ) {
+            for (i = 1; i <= (nx_cells - 2); i++ ) {
+
                 x = i - dt0_x * u[ID(i, j)];
                 y = j - dt0_y * v[ID(i, j)];
                 if (x < 0.5) {
