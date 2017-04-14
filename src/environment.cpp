@@ -7,7 +7,7 @@
 
 #include "environment.h"
 #include <algorithm>
-#include <omp.h>
+//#include <omp.h>
 
 namespace CGL {
 
@@ -29,6 +29,10 @@ namespace CGL {
         this->T = (float*)malloc(n_cells*(sizeof(float)));
         this->T_p = (float*)malloc(n_cells*(sizeof(float)));
 
+        this->vort = (float*)malloc(n_cells*(sizeof(float)));
+        this->vort_f_y = (float*)malloc(n_cells*(sizeof(float)));
+        this->vort_f_x = (float*)malloc(n_cells*(sizeof(float)));
+
         // Initialize fluid field (u_field)
         
 
@@ -44,7 +48,7 @@ namespace CGL {
                 T_p[ID(x, y)] = 000.0;
             }
         }
-        T[ID(200, 200)] += 500;
+       T[ID(200, 200)] += 500;
        for (int x = 0; x < nx_cells; x += 50) {
            for (int y = 0; y < ny_cells; y += 50) {
                T[ID(x, y)] += 500;
@@ -100,6 +104,11 @@ namespace CGL {
         SWAP(uy, uy_p);
         advect(1, ux, ux_p, ux_p, uy_p, delta_t, false);
         advect(1, uy, uy_p, ux_p, uy_p, delta_t, false);
+
+        // adds vorticity
+        calc_vorticity();
+        add_source(ux, vort_f_x, delta_t);
+        add_source(uy, vort_f_y, delta_t);
         project();
 
     }
@@ -116,6 +125,34 @@ namespace CGL {
         }
     }
 
+
+    void Environment::calc_vorticity() {
+
+        // create vorticity field
+        for (int i = 1; i <= (nx_cells - 2); i++) {
+            for (int j = 1; j <= (ny_cells - 2); j++) {
+               // calculate curl at point to obtain vorticity at each point
+               vort[ID(i, j)] = uy[ID(i + 1, j)] - uy[ID(i - 1, j)] -  (ux[ID(i, j - 1)] - ux[ID(i, j + 1)]);
+            }
+        }
+
+        //calculate vorticity force
+        float epsilon = 2.0;
+        for (int i = 1; i <= (nx_cells - 2); i++) {
+            for (int j = 1; j <= (ny_cells - 2); j++) {
+
+                // calculate gradient of vorticity field
+                Vector2D eta = Vector2D(abs(vort[ID(i, j - 1)]) - abs(vort[ID(i, j + 1)]), abs(vort[ID(i + 1, j)]) - abs(vort[ID(i - 1, j)]));
+                Vector2D N = eta / eta.norm();
+
+                // calculate force, using Fedkiw 2001, not sure how to find h...
+                Vector3D vort_f_vector = (epsilon * cross(Vector3D(N.x, N.y, 0), Vector3D(0, 0, vort[ID(i, j)])));
+                vort_f_x[ID(i, j)] = vort_f_vector.x;
+                vort_f_y[ID(i, j)] = vort_f_vector.y;
+            }
+        }
+
+    }
 
     // Steps:
     // 1. add_source(force)

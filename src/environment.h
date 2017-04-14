@@ -48,6 +48,11 @@ class Environment {
     float* T;
     float* T_p;
 
+    float* vort;
+    float* vort_f_x;
+    float* vort_f_y;
+
+
 
 
     void simulate(float delta_t, Vector3D gravity, vector<InputItem> inputs);
@@ -61,6 +66,7 @@ class Environment {
     // 4. project
     void simulate_temp(float delta_t);
     void temp_decay(float * T, float delta_t);
+    void calc_vorticity();
 
     // Steps:
     // 1. add_source(force)
