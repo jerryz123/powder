@@ -5,7 +5,7 @@ set(APPLICATION_SOURCE
     environment.cpp
     application.cpp
     main.cpp
-)
+        particle.h particle.cpp)
 
 #-------------------------------------------------------------------------------
 # Set include directories

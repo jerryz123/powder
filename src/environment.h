@@ -19,9 +19,10 @@ namespace CGL {
         InputMode input_mode;
     };
 
+class Particle;
+
 class Environment {
  public:
-
     Environment(size_t nx_cells, size_t ny_cells,
                 float cell_width, float cell_height);
 
@@ -51,7 +52,7 @@ class Environment {
     float* vort;
     float* vort_f_x;
     float* vort_f_y;
-
+    vector<Particle> particles_list;
 
 
 

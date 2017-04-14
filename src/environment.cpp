@@ -6,11 +6,11 @@
 
 
 #include "environment.h"
+#include "particle.h"
 #include <algorithm>
 //#include <omp.h>
 
 namespace CGL {
-
 
     Environment::Environment(size_t nx_cells, size_t ny_cells,
                              float cell_width, float cell_height) {
@@ -34,8 +34,6 @@ namespace CGL {
         this->vort_f_x = (float*)malloc(n_cells*(sizeof(float)));
 
         // Initialize fluid field (u_field)
-        
-
         #pragma omp parallel for
         for (int y = 0; y < ny_cells; y++) {
             for (int x = 0; x < nx_cells; x++) {
@@ -54,18 +52,26 @@ namespace CGL {
                T[ID(x, y)] += 500;
            }
        }
-        // for (int y = 50; y < 150; y++) {
-        //     for (int x = 100; x < 200; x++) {
-        //         ux[ID(x, y)] = 34;
-        //         uy[ID(x, y)] = -20;
-        //     }
-        // }
-        // for (int y = 90; y < 150; y++) {
-        //     for (int x = 250; x < 350; x++) {
-        //         ux[ID(x, y)] = 0;
-        //         uy[ID(x, y)] = 70;
-        //     }
-        // }
+
+       // initialize particles in system
+       for (int x = 0; x < nx_cells; x += 100) {
+           for (int y = 0; y < ny_cells; y += 100) {
+               particles_list.push_back(Fuel(Vector2D(x, y), 1.0, 1.0, 0.0, 0.0, this));
+           }
+       }
+
+       // for (int y = 50; y < 150; y++) {
+       //     for (int x = 100; x < 200; x++) {
+       //         ux[ID(x, y)] = 34;
+       //         uy[ID(x, y)] = -20;
+       //     }
+       // }
+       // for (int y = 90; y < 150; y++) {
+       //     for (int x = 250; x < 350; x++) {
+       //         ux[ID(x, y)] = 0;
+       //         uy[ID(x, y)] = 70;
+       //     }
+       // }
     }
 
 
