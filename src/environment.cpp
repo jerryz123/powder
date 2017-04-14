@@ -128,11 +128,10 @@ namespace CGL {
 
     void Environment::calc_vorticity() {
 
-        // populate vorticity field
+        // create vorticity field
         for (int i = 1; i <= (nx_cells - 2); i++) {
             for (int j = 1; j <= (ny_cells - 2); j++) {
-
-               // calculate curl at point
+               // calculate curl at point to obtain vorticity at each point
                vort[ID(i, j)] = uy[ID(i + 1, j)] - uy[ID(i - 1, j)] -  (ux[ID(i, j - 1)] - ux[ID(i, j + 1)]);
             }
         }
@@ -142,13 +141,14 @@ namespace CGL {
         for (int i = 1; i <= (nx_cells - 2); i++) {
             for (int j = 1; j <= (ny_cells - 2); j++) {
 
-                // calculate gradient of abs(vort)
+                // calculate gradient of vorticity field
                 Vector2D eta = Vector2D(abs(vort[ID(i, j - 1)]) - abs(vort[ID(i, j + 1)]), abs(vort[ID(i + 1, j)]) - abs(vort[ID(i - 1, j)]));
                 Vector2D N = eta / eta.norm();
 
                 // calculate force, using Fedkiw 2001, not sure how to find h...
-                vort_f_x[ID(i, j)] = (epsilon * (N * vort[ID(i, j)])).x;
-                vort_f_y[ID(i, j)] = (epsilon * (N * vort[ID(i, j)])).y;
+                Vector3D vort_f_vector = (epsilon * cross(Vector3D(N.x, N.y, 0), Vector3D(0, 0, vort[ID(i, j)])));
+                vort_f_x[ID(i, j)] = vort_f_vector.x;
+                vort_f_y[ID(i, j)] = vort_f_vector.y;
             }
         }
 
