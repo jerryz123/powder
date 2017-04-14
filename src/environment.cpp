@@ -70,7 +70,7 @@ namespace CGL {
         // memset(uy_p, 0, nx_cells*ny_cells*sizeof(float));
         // memset(T_p, 0, nx_cells*ny_cells*sizeof(float));
         // updates ux_p, uy_p, T_p from inputs and gravity
-        
+
         get_from_UI(delta_t, gravity, inputs);
         thermal_buoyancy(uy_p, delta_t);
         simulate_vel(delta_t);
@@ -81,10 +81,10 @@ namespace CGL {
         for (InputItem i : inputs) {
             int x = (int) i.pos.x / cell_width;
             int y = (int) i.pos.y / cell_height;
-            if (x < nx_cells && y < ny_cells) {
+            if (x < nx_cells-1 && y < ny_cells-1 && x > 0 && y > 0) {
                 switch (i.input_mode) {
                 case temperature:
-                    T_p[ID(x, y)] += 1000;
+                    T_p[ID(x, y)] += 500;
                     break;
                 }
             }
@@ -164,10 +164,13 @@ namespace CGL {
     }
 
     void Environment::add_source(float * curr, float * prev, float delta_t) {
-        int i, size = nx_cells*ny_cells;
-        for (i = 0; i < size; i++ ) {
-            curr[i] += delta_t*prev[i];
+        #pragma omp parallel for
+        for (int j = 2; j < ny_cells-2; j++ ) {
+            for (int i = 2; i < nx_cells-2; i++) {
+                curr[ID(i, j)] += delta_t*prev[ID(i, j)];
+            }
         }
+            
     }
 
     void Environment::diffuse(int b, float * x, float * x0, float diff, float dt, bool isTemp) {

@@ -39,7 +39,7 @@ class Environment {
     const float rho = 1.0;
 
     const float visc = 1.0;
-    const float T_diff = 0.001;
+    const float T_diff = 0.005;
     const float u_diff = 0;
     float* ux;
     float* uy;

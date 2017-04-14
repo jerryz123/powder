@@ -17,7 +17,6 @@ namespace CGL {
         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
         glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
         glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
-
         glPointSize(1);
         glLineWidth(4);
 
