@@ -99,16 +99,18 @@ namespace CGL {
     void Environment::simulate_vel(float delta_t) {
         add_source(ux, ux_p, delta_t);
         add_source(uy, uy_p, delta_t);
+
+        // adds vorticity
+        calc_vorticity();
+
+        add_source(ux, vort_f_x, delta_t);
+        add_source(uy, vort_f_y, delta_t);
+
         project();
         SWAP(ux, ux_p);
         SWAP(uy, uy_p);
         advect(1, ux, ux_p, ux_p, uy_p, delta_t, false);
         advect(1, uy, uy_p, ux_p, uy_p, delta_t, false);
-
-        // adds vorticity
-        calc_vorticity();
-        add_source(ux, vort_f_x, delta_t);
-        add_source(uy, vort_f_y, delta_t);
         project();
 
     }
