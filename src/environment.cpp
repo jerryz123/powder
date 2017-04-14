@@ -7,7 +7,7 @@
 
 #include "environment.h"
 #include <algorithm>
-#include <omp.h>
+//#include <omp.h>
 
 namespace CGL {
 
@@ -28,6 +28,10 @@ namespace CGL {
 
         this->T = (float*)malloc(n_cells*(sizeof(float)));
         this->T_p = (float*)malloc(n_cells*(sizeof(float)));
+
+        this->vort = (float*)malloc(n_cells*(sizeof(float)));
+        this->vort_f_y = (float*)malloc(n_cells*(sizeof(float)));
+        this->vort_f_x = (float*)malloc(n_cells*(sizeof(float)));
 
         // Initialize fluid field (u_field)
         
@@ -100,6 +104,11 @@ namespace CGL {
         SWAP(uy, uy_p);
         advect(1, ux, ux_p, ux_p, uy_p, delta_t, false);
         advect(1, uy, uy_p, ux_p, uy_p, delta_t, false);
+
+        // adds vorticity
+        calc_vorticity();
+        add_source(ux, vort_f_x, delta_t);
+        add_source(uy, vort_f_y, delta_t);
         project();
 
     }
@@ -116,6 +125,34 @@ namespace CGL {
         }
     }
 
+
+    void Environment::calc_vorticity() {
+
+        // populate vorticity field
+        for (int i = 1; i <= (nx_cells - 2); i++) {
+            for (int j = 1; j <= (ny_cells - 2); j++) {
+
+               // calculate curl at point
+               vort[ID(i, j)] = uy[ID(i + 1, j)] - uy[ID(i - 1, j)] -  (ux[ID(i, j - 1)] - ux[ID(i, j + 1)]);
+            }
+        }
+
+        //calculate vorticity force
+        float epsilon = 2.0;
+        for (int i = 1; i <= (nx_cells - 2); i++) {
+            for (int j = 1; j <= (ny_cells - 2); j++) {
+
+                // calculate gradient of abs(vort)
+                Vector2D eta = Vector2D(abs(vort[ID(i, j - 1)]) - abs(vort[ID(i, j + 1)]), abs(vort[ID(i + 1, j)]) - abs(vort[ID(i - 1, j)]));
+                Vector2D N = eta / eta.norm();
+
+                // calculate force, using Fedkiw 2001, not sure how to find h...
+                vort_f_x[ID(i, j)] = (epsilon * (N * vort[ID(i, j)])).x;
+                vort_f_y[ID(i, j)] = (epsilon * (N * vort[ID(i, j)])).y;
+            }
+        }
+
+    }
 
     // Steps:
     // 1. add_source(force)
