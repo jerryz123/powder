@@ -43,6 +43,7 @@ namespace CGL {
 
         glBegin(GL_POINTS);
         float t;
+        float t1;
         Vector3D color;
         for (int y = 0; y < config.ny_cells; y++) {
             for (int x = 0; x < config.nx_cells; x++) {
@@ -55,6 +56,11 @@ namespace CGL {
                 case smoke:
                     t = env->smoke[x+y*config.nx_cells];
                     glColor4f(0, 0, 0, t);
+                    break;
+                case debug:
+                    t = env->ux[x+y*config.nx_cells] + 0.5;
+                    t1 = env->uy[x+y*config.nx_cells] + 0.5;
+                    glColor4f(t, t1, 0, 1);
                     break;
                 }
                 
@@ -95,6 +101,9 @@ namespace CGL {
             break;
         case 'T':
             config.mode = temperature;
+            break;
+        case 'D':
+            config.mode = debug;
             break;
         }
     }

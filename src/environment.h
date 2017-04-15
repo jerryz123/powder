@@ -14,7 +14,8 @@ namespace CGL {
     enum InputMode {
         none,
         temperature,
-        smoke
+        smoke,
+        debug
     };
     struct InputItem {
         Vector2D pos;
@@ -56,8 +57,8 @@ class Environment {
 
     float* smoke;
     float* smoke_p;
-    vector<Particle> particles_list;
 
+    vector<Particle> particles_list;
 
 
     void simulate(float delta_t, Vector3D gravity, vector<InputItem> inputs);

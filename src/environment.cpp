@@ -51,7 +51,7 @@ namespace CGL {
                 smoke_p[ID(x, y)] = 0.0;
             }
         }
-       T[ID(200, 200)] += 1000;
+       // T[ID(200, 200)] += 1000;
        for (int x = 0; x < nx_cells; x += 50) {
            for (int y = 0; y < ny_cells; y += 50) {
                smoke[ID(x, y)] += 500;
@@ -163,7 +163,7 @@ namespace CGL {
         }
 
         //calculate vorticity force
-        float epsilon = 200.0;
+        float epsilon = 1000.0;
         for (int i = 1; i <= (nx_cells - 2); i++) {
             for (int j = 1; j <= (ny_cells - 2); j++) {
 
@@ -268,6 +268,7 @@ namespace CGL {
                 p[ID(i,j)] = 0;
             }
         }
+
         set_bnd(0, div ); set_bnd(0, p );
         for (k = 0; k < 20; k++) {
 #pragma omp parallel for schedule(dynamic, 4)
