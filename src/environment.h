@@ -12,7 +12,9 @@ using namespace std;
 namespace CGL {
 
     enum InputMode {
-        temperature
+        none,
+        temperature,
+        smoke
     };
     struct InputItem {
         Vector2D pos;
@@ -31,16 +33,15 @@ class Environment {
     // 3. sim_t();
     // 4. sim_smoke();
 
-        size_t nx_cells;
+    size_t nx_cells;
     size_t ny_cells;
     float cell_width;
     float cell_height;
 
-    const float rho = 1.0;
 
-    const float visc = 1.0;
     const float T_diff = 0.005;
     const float u_diff = 0;
+    const float smoke_diff = 0.01;
     float* ux;
     float* uy;
     float* ux_p;
@@ -51,6 +52,9 @@ class Environment {
     float* vort;
     float* vort_f_x;
     float* vort_f_y;
+
+    float* smoke;
+    float* smoke_p;
 
 
 
@@ -74,7 +78,7 @@ class Environment {
     // 3. advect
     void simulate_particle();
     void thermal_buoyancy(float* f, float delta_t);
-    void simulate_smoke();
+    void simulate_smoke(float delta_t);
     void get_from_UI(float delta_t, Vector3D gravity, vector<InputItem> inputs);
     void add_source(float * curr, float * prev, float delta_t);
     void diffuse(int b, float * x, float * x0, float diff, float dt, bool isTemp);

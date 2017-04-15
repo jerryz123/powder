@@ -2,6 +2,7 @@
 
 #include "application.h"
 #include "environment.h"
+#include "colormap.h"
 
 namespace CGL {
 
@@ -21,7 +22,7 @@ namespace CGL {
         glLineWidth(4);
 
         glColor3f(1.0, 1.0, 1.0);
-
+        glClearColor(1, 1, 1, 1);
         env = new Environment(config.nx_cells, config.ny_cells,
                               config.cell_width, config.cell_height);
 
@@ -41,10 +42,22 @@ namespace CGL {
 
 
         glBegin(GL_POINTS);
+        float t;
+        Vector3D color;
         for (int y = 0; y < config.ny_cells; y++) {
             for (int x = 0; x < config.nx_cells; x++) {
-                float t = env->T[x+y*config.nx_cells];
-                glColor3f(t, t, t);
+                switch (config.mode) {
+                case temperature:
+                    t = env->T[x+y*config.nx_cells];
+                    color = jet(t);
+                    glColor4f(color.x, color.y, color.z, 1);
+                    break;
+                case smoke:
+                    t = env->smoke[x+y*config.nx_cells];
+                    glColor4f(0, 0, 0, t);
+                    break;
+                }
+                
                 glVertex2d(x, y);
             }
         }
@@ -77,6 +90,12 @@ namespace CGL {
         case 'P':
             config.is_simulating = !config.is_simulating;
             break;
+        case 'S':
+            config.mode = smoke;
+            break;
+        case 'T':
+            config.mode = temperature;
+            break;
         }
     }
 
@@ -85,7 +104,7 @@ namespace CGL {
         if (left > 0) {
             InputItem input;
             input.pos = Vector2D(x, y);
-            input.input_mode = config.input_mode;
+            input.input_mode = config.mode;
             inputs.push_back(input);
         }
     }

@@ -5,6 +5,7 @@ set(APPLICATION_SOURCE
     environment.cpp
     application.cpp
     main.cpp
+    colormap.cpp
 )
 
 #-------------------------------------------------------------------------------

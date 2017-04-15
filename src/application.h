@@ -15,9 +15,11 @@
 
 #include "environment.h"
 
+
 using namespace std;
 
 namespace CGL {
+
     struct AppConfig {
         AppConfig() {
             // Assign globla vars here
@@ -33,7 +35,7 @@ namespace CGL {
             nx_cells = 500;
             ny_cells = 600;
             is_simulating = true;
-            input_mode = temperature;
+            mode = temperature;
             delta_t = 0.001;
 
         }
@@ -47,7 +49,7 @@ namespace CGL {
         float cell_width;
         float cell_height;
         Vector3D gravity;
-        InputMode input_mode;
+        InputMode mode;
 
     };
 

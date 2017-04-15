@@ -7,7 +7,7 @@
 
 #include "environment.h"
 #include <algorithm>
-//#include <omp.h>
+#include <omp.h>
 
 namespace CGL {
 
@@ -33,6 +33,9 @@ namespace CGL {
         this->vort_f_y = (float*)malloc(n_cells*(sizeof(float)));
         this->vort_f_x = (float*)malloc(n_cells*(sizeof(float)));
 
+        this->smoke = (float*)malloc(n_cells*(sizeof(float)));
+        this->smoke_p = (float*)malloc(n_cells*(sizeof(float)));
+
         // Initialize fluid field (u_field)
         
 
@@ -46,12 +49,14 @@ namespace CGL {
                 uy_p[ID(x, y)] = 0.0;
                 T[ID(x, y)] = 0.0;
                 T_p[ID(x, y)] = 000.0;
+                smoke[ID(x, y)] = 0.0;
+                smoke_p[ID(x, y)] = 0.0;
             }
         }
-       T[ID(200, 200)] += 500;
+       T[ID(200, 200)] += 1000;
        for (int x = 0; x < nx_cells; x += 50) {
            for (int y = 0; y < ny_cells; y += 50) {
-               T[ID(x, y)] += 500;
+               smoke[ID(x, y)] += 500;
            }
        }
         // for (int y = 50; y < 150; y++) {
@@ -75,10 +80,12 @@ namespace CGL {
         // memset(T_p, 0, nx_cells*ny_cells*sizeof(float));
         // updates ux_p, uy_p, T_p from inputs and gravity
 
+
         get_from_UI(delta_t, gravity, inputs);
         thermal_buoyancy(uy_p, delta_t);
         simulate_vel(delta_t);
         simulate_temp(delta_t);
+        simulate_smoke(delta_t);
     }
     void Environment::get_from_UI(float delta_t, Vector3D gravity, vector<InputItem> inputs) {
 
@@ -87,12 +94,23 @@ namespace CGL {
             int y = (int) i.pos.y / cell_height;
             if (x < nx_cells-1 && y < ny_cells-1 && x > 0 && y > 0) {
                 switch (i.input_mode) {
-                case temperature:
+                case InputMode::temperature:
                     T_p[ID(x, y)] += 500;
+                    break;
+                case InputMode::smoke:
+                    smoke[ID(x, y)] += 10;
                     break;
                 }
             }
         }
+    }
+    void Environment::simulate_smoke(float delta_t) {
+        add_source(smoke, smoke_p, delta_t);
+        SWAP(smoke_p, smoke);
+        diffuse(0, smoke, smoke_p, smoke_diff, delta_t, true);
+        SWAP(smoke_p, smoke);
+        advect(0, smoke, smoke_p, ux, uy, delta_t, true);
+        temp_decay(smoke, delta_t);
     }
 
 
@@ -121,7 +139,7 @@ namespace CGL {
                 float T_here = T[ID(i, j)];
                 float T_above = T[ID(i, j - 1)];
                 if (T_above < T_here) {
-                    f[ID(i, j)] -= 2000.*(T_here - T_above);
+                    f[ID(i, j)] -= 5000.*(T_here - T_above);
                 }
             }
         }
@@ -139,7 +157,7 @@ namespace CGL {
         }
 
         //calculate vorticity force
-        float epsilon = 2.0;
+        float epsilon = 200.0;
         for (int i = 1; i <= (nx_cells - 2); i++) {
             for (int j = 1; j <= (ny_cells - 2); j++) {
 
@@ -198,9 +216,6 @@ namespace CGL {
 
     }
 
-    void Environment::simulate_smoke() {
-
-    }
 
     void Environment::add_source(float * curr, float * prev, float delta_t) {
         #pragma omp parallel for
