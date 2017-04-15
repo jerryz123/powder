@@ -14,7 +14,8 @@ namespace CGL {
     enum InputMode {
         none,
         temperature,
-        smoke
+        smoke,
+        debug
     };
     struct InputItem {
         Vector2D pos;
@@ -53,14 +54,13 @@ class Environment {
     float* vort;
     float* vort_f_x;
     float* vort_f_y;
-<<<<<<< HEAD
 
     float* smoke;
     float* smoke_p;
 
-=======
+
     vector<Particle> particles_list;
->>>>>>> 7802cb4a4266826b2af4e16a10c7c237fdf003db
+
 
 
 
