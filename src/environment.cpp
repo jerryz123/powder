@@ -8,7 +8,7 @@
 #include "environment.h"
 #include "particle.h"
 #include <algorithm>
-#include <omp.h>
+//include <omp.h>
 
 namespace CGL {
 
