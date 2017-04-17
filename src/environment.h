@@ -15,7 +15,8 @@ namespace CGL {
         none,
         temperature,
         smoke,
-        debug
+        debug,
+        fuel
     };
     struct InputItem {
         Vector2D pos;
@@ -44,6 +45,7 @@ class Environment {
     const float T_diff = 0.005;
     const float u_diff = 0;
     const float smoke_diff = 0.01;
+    const float gravity = 250;
     float* ux;
     float* uy;
     float* ux_p;
@@ -59,32 +61,22 @@ class Environment {
     float* smoke_p;
 
 
-    vector<Particle> particles_list;
+    vector<Particle>* particles_list;
+    bool* occupied_cells;
 
 
 
 
-    void simulate(float delta_t, Vector3D gravity, vector<InputItem> inputs);
+    void simulate(float delta_t, vector<InputItem> inputs);
 
     void simulate_vel(float delta_t);
-
-    // Steps:
-    // 1. add_source(force)
-    // 2. diffuse
-    // 3. advect
-    // 4. project
     void simulate_temp(float delta_t);
     void temp_decay(float * T, float delta_t);
     void calc_vorticity();
-
-    // Steps:
-    // 1. add_source(force)
-    // 2. diffuse
-    // 3. advect
-    void simulate_particle();
+    void simulate_particle(float delta_t);
     void thermal_buoyancy(float* f, float delta_t);
     void simulate_smoke(float delta_t);
-    void get_from_UI(float delta_t, Vector3D gravity, vector<InputItem> inputs);
+    void get_from_UI(float delta_t, vector<InputItem> inputs);
     void add_source(float * curr, float * prev, float delta_t);
     void diffuse(int b, float * x, float * x0, float diff, float dt, bool isTemp);
     void project();

@@ -17,15 +17,15 @@ class Particle {
         float burn_rate;
         float density;
         float radius;
-        float u_x;
-        float u_y;
+        float ux;
+        float uy;
         Environment *env;
 
 };
 
 class Soot : public Particle {
     public:
-        Soot(Vector2D position, float radius, float density, float u_x, float u_y, Environment *env) : Particle (position, radius, density, u_x, u_y, env) {
+        Soot(Vector2D position, float radius, float density, float ux, float uy, Environment *env) : Particle (position, radius, density, ux, uy, env) {
             burn_rate = 0.1;
         }
         void simulate(float delta_t);
@@ -34,7 +34,7 @@ class Soot : public Particle {
 
 class Fuel : public Particle {
     public:
-        Fuel(Vector2D position, float radius, float density, float u_x, float u_y, Environment *env) : Particle (position, radius, density, u_x, u_y, env) {
+        Fuel(Vector2D position, float radius, float density, float ux, float uy, Environment *env) : Particle (position, radius, density, ux, uy, env) {
             burn_rate = 0.5;
         }
         void simulate(float delta_t);

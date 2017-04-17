@@ -11,12 +11,12 @@
 //#include <omp.h>
 
 namespace CGL {
-    Particle::Particle(Vector2D position, float radius, float density, float u_x, float u_y, Environment *env) {
+    Particle::Particle(Vector2D position, float radius, float density, float ux, float uy, Environment *env) {
         this->position = position;
         this->radius = radius;
         this->density = density;
-        this->u_x = u_x;
-        this->u_y = u_y;
+        this->ux = ux;
+        this->uy = uy;
         this->env = env;
     }
 
