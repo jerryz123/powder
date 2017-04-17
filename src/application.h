@@ -28,7 +28,6 @@ namespace CGL {
             /* ks = 100; */
 
             // Environment variables
-            gravity = Vector3D(0, 100, 0);
             steps_per_frame = 1;
             cell_width = 1.0;
             cell_height = 1.0;
@@ -48,7 +47,6 @@ namespace CGL {
         float delta_t;
         float cell_width;
         float cell_height;
-        Vector3D gravity;
         InputMode mode;
 
     };

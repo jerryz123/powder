@@ -10,6 +10,8 @@
 #include <algorithm>
 //include <omp.h>
 
+#define UNIFORM(a, b) ((rand() / (double) RAND_MAX) * (b - a) + a)
+
 namespace CGL {
 
     Environment::Environment(size_t nx_cells, size_t ny_cells,
@@ -36,12 +38,15 @@ namespace CGL {
         this->smoke = (float*)malloc(n_cells*(sizeof(float)));
         this->smoke_p = (float*)malloc(n_cells*(sizeof(float)));
 
+        this->particles_list = new vector<Particle>;
+        this->occupied_cells = (bool*)malloc(n_cells*sizeof(bool));
+
         // Initialize fluid field (u_field)
         #pragma omp parallel for
         for (int y = 0; y < ny_cells; y++) {
             for (int x = 0; x < nx_cells; x++) {
-                ux[ID(x, y)] = 10. * (rand() / (double) RAND_MAX - 0.5);
-                uy[ID(x, y)] = 10. * (rand() / (double) RAND_MAX - 0.5);
+                ux[ID(x, y)] = UNIFORM(-5, 5);
+                uy[ID(x, y)] = UNIFORM(-5, 5);
 
                 ux_p[ID(x, y)] = 0.0;
                 uy_p[ID(x, y)] = 0.0;
@@ -58,12 +63,8 @@ namespace CGL {
            }
        }
 
-       // initialize particles in system
-       for (int x = 0; x < nx_cells; x += 100) {
-           for (int y = 0; y < ny_cells; y += 100) {
-               particles_list.push_back(Fuel(Vector2D(x, y), 1.0, 1.0, 0.0, 0.0, this));
-           }
-       }
+
+
 
        // for (int y = 50; y < 150; y++) {
        //     for (int x = 100; x < 200; x++) {
@@ -80,20 +81,21 @@ namespace CGL {
     }
 
 
-    void Environment::simulate(float delta_t, Vector3D gravity, vector<InputItem> inputs) {
+    void Environment::simulate(float delta_t, vector<InputItem> inputs) {
         // memset(ux_p, 0, nx_cells*ny_cells*sizeof(float));
         // memset(uy_p, 0, nx_cells*ny_cells*sizeof(float));
         // memset(T_p, 0, nx_cells*ny_cells*sizeof(float));
         // updates ux_p, uy_p, T_p from inputs and gravity
 
 
-        get_from_UI(delta_t, gravity, inputs);
+        get_from_UI(delta_t, inputs);
         thermal_buoyancy(uy_p, delta_t);
+        simulate_particle(delta_t);
         simulate_vel(delta_t);
         simulate_temp(delta_t);
         simulate_smoke(delta_t);
     }
-    void Environment::get_from_UI(float delta_t, Vector3D gravity, vector<InputItem> inputs) {
+    void Environment::get_from_UI(float delta_t, vector<InputItem> inputs) {
 
         for (InputItem i : inputs) {
             int x = (int) i.pos.x / cell_width;
@@ -106,6 +108,17 @@ namespace CGL {
                 case InputMode::smoke:
                     smoke[ID(x, y)] += 10;
                     break;
+                case InputMode::fuel:
+                    particles_list->push_back(Particle(Vector2D(i.pos.x + UNIFORM(-0.1, 0.1),
+                                                                i.pos.y + UNIFORM(-0.1, 0.1)),
+                                                       4.,
+                                                       1.,
+                                                       0,
+                                                       0,
+                                                      this));
+                    break;
+                    
+                
                 }
             }
         }
@@ -145,7 +158,7 @@ namespace CGL {
                 float T_here = T[ID(i, j)];
                 float T_above = T[ID(i, j - 1)];
                 if (T_above < T_here) {
-                    f[ID(i, j)] -= 5000.*(T_here - T_above);
+                    f[ID(i, j)] -= 8000.*(T_here - T_above);
                 }
             }
         }
@@ -155,6 +168,7 @@ namespace CGL {
     void Environment::calc_vorticity() {
 
         // create vorticity field
+#pragma omp parallel for schedule(dynamic, 4)
         for (int i = 1; i <= (nx_cells - 2); i++) {
             for (int j = 1; j <= (ny_cells - 2); j++) {
                // calculate curl at point to obtain vorticity at each point
@@ -164,6 +178,7 @@ namespace CGL {
 
         //calculate vorticity force
         float epsilon = 1000.0;
+#pragma omm parallel for schedule(dynamic, 4)
         for (int i = 1; i <= (nx_cells - 2); i++) {
             for (int j = 1; j <= (ny_cells - 2); j++) {
 
@@ -218,9 +233,52 @@ namespace CGL {
     // 1. add_source(force)
     // 2. diffuse
     // 3. advect
-    void Environment::simulate_particle() {
-
+    void Environment::simulate_particle(float delta_t) {
+        particle_positions(delta_t);
+        
     }
+    void Environment::particle_positions(float delta_t) {
+        vector<Particle>* newlist = new vector<Particle>;
+        for (int i = 0; i < nx_cells * ny_cells; i++) {
+            occupied_cells[i] = false;
+        }
+        for (Particle p : *particles_list) {
+            int x = (int) p.position.x;
+            int y = (int) p.position.y;
+            if (x >= 0 && x < nx_cells &&
+                y >= 0 && y < ny_cells) {
+                p.uy += gravity*p.radius*p.radius*p.density*delta_t;
+                float dux = ux[ID(x, y)] - p.ux;
+                float duy = uy[ID(x, y)] - p.uy;
+                p.ux += dux*p.radius/10;
+                p.uy += duy*p.radius/10;
+                p.position.x += 1000. * delta_t * p.ux;
+                p.position.y += 1000. * delta_t * p.uy;
+
+                if (p.position.y > ny_cells - 4) {
+                    p.position.y = ny_cells - 4 - UNIFORM(0, 1);
+                    p.uy = 0;
+                }
+
+                while (occupied_cells[ID((int)p.position.x, (int)p.position.y)]) {
+                    p.position.y -= 1;
+                    p.uy = 0;
+                    p.ux = 0;
+                }
+                occupied_cells[ID((int)p.position.x, (int)p.position.y)] = true;
+                if (p.position.y > 0 && p.position.y < ny_cells &&
+                    p.position.x > 1 && p.position.x < nx_cells - 1) {
+                    newlist->push_back(p);
+                }
+
+            }
+        }
+        vector<Particle>* temp = particles_list;
+        particles_list = newlist;
+        delete temp;
+    }
+
+
 
 
     void Environment::add_source(float * curr, float * prev, float delta_t) {

@@ -3,6 +3,7 @@
 #include "application.h"
 #include "environment.h"
 #include "colormap.h"
+#include "particle.h"
 
 namespace CGL {
 
@@ -32,16 +33,16 @@ namespace CGL {
         if (config.is_simulating) {
             for (int i = 0; i < config.steps_per_frame; i++) {
                 // Simulate one step here
-                env->simulate(config.delta_t, config.gravity, inputs);
-                // ropeEuler->simulateEuler(1 / config.steps_per_frame, config.gravity);
-                // ropeVerlet->simulateVerlet(1 / config.steps_per_frame, config.gravity);
+                env->simulate(config.delta_t, inputs);
+
                 inputs.clear();
             }
         }
         // Draw to screen here
 
-
+        glPointSize(1.);
         glBegin(GL_POINTS);
+        
         float t;
         float t1;
         Vector3D color;
@@ -62,10 +63,25 @@ namespace CGL {
                     t1 = env->uy[x+y*config.nx_cells] + 0.5;
                     glColor4f(t, t1, 0, 1);
                     break;
+                case fuel:
+                    glColor4f(0, 0, 0, 0);
+                    break;
                 }
                 
                 glVertex2d(x, y);
             }
+        }
+        glEnd();
+        glPointSize(2.);
+        glBegin(GL_POINTS);
+        
+        switch (config.mode) {
+        case fuel:
+            glColor4f(0, 0, 0, 1);
+            for (Particle p : *(env->particles_list)) {
+                glVertex2d(p.position.x, p.position.y);
+            }
+            break;
         }
         glEnd();
         glFlush();
@@ -104,6 +120,9 @@ namespace CGL {
             break;
         case 'D':
             config.mode = debug;
+            break;
+        case 'F':
+            config.mode = fuel;
             break;
         }
     }
