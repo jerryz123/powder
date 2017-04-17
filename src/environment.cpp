@@ -168,6 +168,7 @@ namespace CGL {
     void Environment::calc_vorticity() {
 
         // create vorticity field
+#pragma omp parallel for schedule(dynamic, 4)
         for (int i = 1; i <= (nx_cells - 2); i++) {
             for (int j = 1; j <= (ny_cells - 2); j++) {
                // calculate curl at point to obtain vorticity at each point
@@ -177,6 +178,7 @@ namespace CGL {
 
         //calculate vorticity force
         float epsilon = 1000.0;
+#pragma omm parallel for schedule(dynamic, 4)
         for (int i = 1; i <= (nx_cells - 2); i++) {
             for (int j = 1; j <= (ny_cells - 2); j++) {
 
@@ -232,6 +234,10 @@ namespace CGL {
     // 2. diffuse
     // 3. advect
     void Environment::simulate_particle(float delta_t) {
+        particle_positions(delta_t);
+        
+    }
+    void Environment::particle_positions(float delta_t) {
         vector<Particle>* newlist = new vector<Particle>;
         for (int i = 0; i < nx_cells * ny_cells; i++) {
             occupied_cells[i] = false;
@@ -270,10 +276,9 @@ namespace CGL {
         vector<Particle>* temp = particles_list;
         particles_list = newlist;
         delete temp;
-
-
-        
     }
+
+
 
 
     void Environment::add_source(float * curr, float * prev, float delta_t) {

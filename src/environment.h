@@ -68,7 +68,7 @@ class Environment {
 
 
     void simulate(float delta_t, vector<InputItem> inputs);
-
+    void particle_positions(float delta_t);
     void simulate_vel(float delta_t);
     void simulate_temp(float delta_t);
     void temp_decay(float * T, float delta_t);

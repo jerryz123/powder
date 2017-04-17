@@ -8,7 +8,7 @@
 #include "particle.h"
 #include "environment.h"
 #include <algorithm>
-//#include <omp.h>
+
 
 namespace CGL {
     Particle::Particle(Vector2D position, float radius, float density, float ux, float uy, Environment *env) {
