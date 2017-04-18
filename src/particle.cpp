@@ -9,9 +9,10 @@
 #include "environment.h"
 #include <algorithm>
 
-
+#define ID(x, y) (x + (y)*env->nx_cells)
 namespace CGL {
-    Particle::Particle(Vector2D position, float radius, float density, float ux, float uy, Environment *env) {
+    Particle::Particle(Vector2D position, float radius, float density,
+                       float ux, float uy, Environment *env) {
         this->position = position;
         this->radius = radius;
         this->density = density;
@@ -20,19 +21,22 @@ namespace CGL {
         this->env = env;
     }
 
-    void Soot::simulate(float delta_t) {
-        //mass = area * density
-        float mass = PI * radius * radius * density;
 
-        // calculate new radius
-        radius = sqrt((mass - burn_rate) / (PI * density));
+    void Soot::simulate(float delta_t) {
+
     }
 
     void Fuel::simulate(float delta_t) {
-        //mass = area * density
-        float mass = PI * radius * radius * density;
+        int x = (int) position.x;
+        int y = (int) position.y;
 
-        // calculate new radius
-        radius = sqrt((mass - burn_rate) / (PI * density));
+        if (env->T[ID(x, y)] > ignition_T ||
+            is_burning) {
+            is_burning = true;
+            radius -= burn_rate * delta_t;
+            env->T_p[ID(x, y)] += 200;
+            env->phi[ID(x, y)] += 5;
+            env->smoke_p[ID(x, y)] += 10;
+        }
     }
 }

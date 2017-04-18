@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 2.8)
 
 # Application source
 set(APPLICATION_SOURCE
-    environment.cpp
-    application.cpp
-    main.cpp
-    particle.cpp
-    colormap.cpp
+  particle.cpp
+  environment.cpp
+  application.cpp
+  main.cpp
+  colormap.cpp
 )
 
 

@@ -10,34 +10,47 @@ using namespace std;
 namespace CGL {
 class Particle {
     public:
-        Particle(Vector2D position, float radius, float density, float u_x, float u_y, Environment *env);
+        Particle(Vector2D position, float radius, float density,
+                 float u_x, float u_y, Environment *env);
 
         Vector2D position;
         const double PI = 3.1415927;
-        float burn_rate;
         float density;
         float radius;
         float ux;
         float uy;
         Environment *env;
+        virtual void simulate(float delta_t) {
+            cout << "Should not be called" << endl;
+        };
 
 };
 
 class Soot : public Particle {
     public:
-        Soot(Vector2D position, float radius, float density, float ux, float uy, Environment *env) : Particle (position, radius, density, ux, uy, env) {
-            burn_rate = 0.1;
+        Soot(Vector2D position, float radius, float density,
+             float ux, float uy, Environment *env)
+            : Particle (position, radius, density, ux, uy, env) {
         }
-        void simulate(float delta_t);
+        virtual void simulate(float delta_t);
 
 };
 
 class Fuel : public Particle {
     public:
-        Fuel(Vector2D position, float radius, float density, float ux, float uy, Environment *env) : Particle (position, radius, density, ux, uy, env) {
-            burn_rate = 0.5;
+        Fuel(Vector2D position, float radius, float density,
+             float ux, float uy, Environment *env)
+            : Particle (position, radius, density, ux, uy, env) {
+            burn_rate = 50;
+            is_burning = false;
+            ignition_T = 0.5;
         }
-        void simulate(float delta_t);
+    float burn_rate;
+    bool is_burning;
+    float ignition_T;
+    
+    virtual void simulate(float delta_t);
+
 
 };
 }

@@ -5,7 +5,7 @@
 #include "CGL/vector3D.h"
 
 #define SWAP(x0,x) {float *tmp=x0;x0=x;x=tmp;}
-#define ID(x, y) ((x) + (y)*nx_cells)
+
 
 using namespace std;
 
@@ -59,9 +59,9 @@ class Environment {
 
     float* smoke;
     float* smoke_p;
+    float* phi;
 
-
-    vector<Particle>* particles_list;
+    vector<Particle*>* particles_list;
     bool* occupied_cells;
 
 
