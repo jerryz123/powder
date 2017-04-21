@@ -43,7 +43,7 @@ class Environment {
 
 
     const float T_diff = 0.005;
-    const float u_diff = 0;
+    const float u_diff = 0.001;
     const float smoke_diff = 0.01;
     const float gravity = 250;
     float* ux;

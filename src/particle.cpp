@@ -32,11 +32,14 @@ namespace CGL {
 
         if (env->T[ID(x, y)] > ignition_T ||
             is_burning) {
+            if (!is_burning) {
+                env->phi[ID(x, y)] += 200;
+            }
             is_burning = true;
             radius -= burn_rate * delta_t;
-            env->T_p[ID(x, y)] += 200;
-            env->phi[ID(x, y)] += 5;
-            env->smoke_p[ID(x, y)] += 10;
+            env->T_p[ID(x, y)] += 100;
+            env->smoke_p[ID(x, y)] += 50;
+
         }
     }
 }

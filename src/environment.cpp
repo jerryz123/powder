@@ -65,6 +65,7 @@ namespace CGL {
     void Environment::simulate(float delta_t, vector<InputItem> inputs) {
         memset(phi, 0, sizeof(float)*nx_cells*ny_cells);
         get_from_UI(delta_t, inputs);
+        calc_vorticity();
         thermal_buoyancy(uy_p, delta_t);
         simulate_particle(delta_t);
         simulate_vel(delta_t);
@@ -112,7 +113,7 @@ namespace CGL {
         add_source(uy, uy_p, delta_t);
 
         // adds vorticity
-        calc_vorticity();
+
 
         add_source(ux, vort_f_x, delta_t);
         add_source(uy, vort_f_y, delta_t);
