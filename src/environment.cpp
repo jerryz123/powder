@@ -11,6 +11,7 @@
 //include <omp.h>
 
 #define UNIFORM(a, b) ((rand() / (double) RAND_MAX) * (b - a) + a)
+#define ID(x, y) ((x) + (y)*nx_cells)
 
 namespace CGL {
 
@@ -38,8 +39,10 @@ namespace CGL {
         this->smoke = (float*)malloc(n_cells*(sizeof(float)));
         this->smoke_p = (float*)malloc(n_cells*(sizeof(float)));
 
-        this->particles_list = new vector<Particle>;
+        this->particles_list = new vector<Particle*>;
         this->occupied_cells = (bool*)malloc(n_cells*sizeof(bool));
+
+        this->phi = (float*)malloc(n_cells*sizeof(float));
 
         // Initialize fluid field (u_field)
         #pragma omp parallel for
@@ -56,38 +59,11 @@ namespace CGL {
                 smoke_p[ID(x, y)] = 0.0;
             }
         }
-       // T[ID(200, 200)] += 1000;
-       for (int x = 0; x < nx_cells; x += 50) {
-           for (int y = 0; y < ny_cells; y += 50) {
-               smoke[ID(x, y)] += 500;
-           }
-       }
-
-
-
-
-       // for (int y = 50; y < 150; y++) {
-       //     for (int x = 100; x < 200; x++) {
-       //         ux[ID(x, y)] = 34;
-       //         uy[ID(x, y)] = -20;
-       //     }
-       // }
-       // for (int y = 90; y < 150; y++) {
-       //     for (int x = 250; x < 350; x++) {
-       //         ux[ID(x, y)] = 0;
-       //         uy[ID(x, y)] = 70;
-       //     }
-       // }
     }
 
 
     void Environment::simulate(float delta_t, vector<InputItem> inputs) {
-        // memset(ux_p, 0, nx_cells*ny_cells*sizeof(float));
-        // memset(uy_p, 0, nx_cells*ny_cells*sizeof(float));
-        // memset(T_p, 0, nx_cells*ny_cells*sizeof(float));
-        // updates ux_p, uy_p, T_p from inputs and gravity
-
-
+        memset(phi, 0, sizeof(float)*nx_cells*ny_cells);
         get_from_UI(delta_t, inputs);
         thermal_buoyancy(uy_p, delta_t);
         simulate_particle(delta_t);
@@ -109,7 +85,7 @@ namespace CGL {
                     smoke[ID(x, y)] += 10;
                     break;
                 case InputMode::fuel:
-                    particles_list->push_back(Particle(Vector2D(i.pos.x + UNIFORM(-0.1, 0.1),
+                    particles_list->push_back(new Fuel(Vector2D(i.pos.x + UNIFORM(-0.1, 0.1),
                                                                 i.pos.y + UNIFORM(-0.1, 0.1)),
                                                        4.,
                                                        1.,
@@ -117,8 +93,6 @@ namespace CGL {
                                                        0,
                                                       this));
                     break;
-                    
-                
                 }
             }
         }
@@ -235,51 +209,51 @@ namespace CGL {
     // 3. advect
     void Environment::simulate_particle(float delta_t) {
         particle_positions(delta_t);
-        
+        for (Particle* p : *particles_list) {
+            p->simulate(delta_t);
+        }
     }
     void Environment::particle_positions(float delta_t) {
-        vector<Particle>* newlist = new vector<Particle>;
+        vector<Particle*>* newlist = new vector<Particle*>;
         for (int i = 0; i < nx_cells * ny_cells; i++) {
             occupied_cells[i] = false;
         }
-        for (Particle p : *particles_list) {
-            int x = (int) p.position.x;
-            int y = (int) p.position.y;
+        for (Particle* p : *particles_list) {
+            int x = (int) p->position.x;
+            int y = (int) p->position.y;
             if (x >= 0 && x < nx_cells &&
                 y >= 0 && y < ny_cells) {
-                p.uy += gravity*p.radius*p.radius*p.density*delta_t;
-                float dux = ux[ID(x, y)] - p.ux;
-                float duy = uy[ID(x, y)] - p.uy;
-                p.ux += dux*p.radius/10;
-                p.uy += duy*p.radius/10;
-                p.position.x += 1000. * delta_t * p.ux;
-                p.position.y += 1000. * delta_t * p.uy;
+                p->uy += gravity*p->radius*p->radius*p->density*delta_t;
+                float dux = ux[ID(x, y)] - p->ux;
+                float duy = uy[ID(x, y)] - p->uy;
+                p->ux += dux*p->radius/10;
+                p->uy += duy*p->radius/10;
+                p->position.x += 1000. * delta_t * p->ux;
+                p->position.y += 1000. * delta_t * p->uy;
 
-                if (p.position.y > ny_cells - 4) {
-                    p.position.y = ny_cells - 4 - UNIFORM(0, 1);
-                    p.uy = 0;
+                if (p->position.y > ny_cells - 4) {
+                    p->position.y = ny_cells - 4 - UNIFORM(0, 1);
+                    p->uy = 0;
                 }
 
-                while (occupied_cells[ID((int)p.position.x, (int)p.position.y)]) {
-                    p.position.y -= 1;
-                    p.uy = 0;
-                    p.ux = 0;
+                while (occupied_cells[ID((int)p->position.x, (int)p->position.y)]) {
+                    p->position.y -= 1;
+                    p->uy = 0;
+                    p->ux = 0;
                 }
-                occupied_cells[ID((int)p.position.x, (int)p.position.y)] = true;
-                if (p.position.y > 0 && p.position.y < ny_cells &&
-                    p.position.x > 1 && p.position.x < nx_cells - 1) {
+                occupied_cells[ID((int)p->position.x, (int)p->position.y)] = true;
+                if (p->position.y > 0 && p->position.y < ny_cells &&
+                    p->position.x > 1 && p->position.x < nx_cells - 1 &&
+                    p->radius > 0) {
                     newlist->push_back(p);
                 }
 
             }
         }
-        vector<Particle>* temp = particles_list;
+        vector<Particle*>* temp = particles_list;
         particles_list = newlist;
         delete temp;
     }
-
-
-
 
     void Environment::add_source(float * curr, float * prev, float delta_t) {
         #pragma omp parallel for
@@ -323,10 +297,10 @@ namespace CGL {
 
                 div[ID(i, j)] = -0.5f * h * (ux[ID(i + 1, j)] - ux[ID(i - 1, j)] +
                                 uy[ID(i, j + 1)] - uy[ID(i, j - 1)]);
-                p[ID(i,j)] = 0;
+                p[ID(i,j)] = phi[ID(i, j)];
             }
         }
-
+        memset(phi, 0, sizeof(float)*nx_cells*ny_cells);
         set_bnd(0, div ); set_bnd(0, p );
         for (k = 0; k < 20; k++) {
 #pragma omp parallel for schedule(dynamic, 4)

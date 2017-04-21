@@ -31,8 +31,8 @@ namespace CGL {
             steps_per_frame = 1;
             cell_width = 1.0;
             cell_height = 1.0;
-            nx_cells = 500;
-            ny_cells = 600;
+            nx_cells = 400;
+            ny_cells = 400;
             is_simulating = true;
             mode = temperature;
             delta_t = 0.001;

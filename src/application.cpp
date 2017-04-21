@@ -78,8 +78,8 @@ namespace CGL {
         switch (config.mode) {
         case fuel:
             glColor4f(0, 0, 0, 1);
-            for (Particle p : *(env->particles_list)) {
-                glVertex2d(p.position.x, p.position.y);
+            for (Particle* p : *(env->particles_list)) {
+                glVertex2d(p->position.x, p->position.y);
             }
             break;
         }
