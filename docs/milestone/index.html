@@ -1,0 +1,80 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="CS 184 Final Project Milestone" />
+  <title>Animating Explosions with an Incompressible Fluid Model</title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="stylesheet.css" type="text/css" />
+</head>
+<body>
+<div id="header">
+<h1 class="title">Animating Explosions with an Incompressible Fluid Model</h1>
+<h2 class="author">CS 184 Final Project Milestone</h2>
+<h3 class="date">Yujie Wen, Hankun Zhao</h3>
+</div>
+<div id="TOC">
+<ul>
+<li><a href="#summary">Summary</a></li>
+<li><a href="#progress">Progress</a><ul>
+<li><a href="#flow-field">Flow Field</a></li>
+<li><a href="#view-models">View models</a></li>
+<li><a href="#particle-model">Particle model</a></li>
+</ul></li>
+<li><a href="#progress-1">Progress</a></li>
+<li><a href="#todo">TODO:</a></li>
+<li><a href="#links">Links:</a></li>
+<li><a href="#resources-used">Resources used:</a></li>
+</ul>
+</div>
+<h1 id="summary">Summary</h1>
+<p>Our project strives to simulate 2D explosions using an incompressible fluid model. As of this milestone we have completed the core simulation model, including fluid field, density, and particle behaviors. We still need to fine tune interactions between components in our model and generate a compelling realistic rendering.</p>
+<h1 id="progress">Progress</h1>
+<h2 id="flow-field">Flow Field</h2>
+<p>We model our fields using a discrete grid structure. Grid cells contain information on the velocity, vorticity, temperature, smoke density, and flux at that point. The motion of the field is determined by solving discrete Navier-Stokes on the velocity field, whild considering the effects of vorticity, temperature, and flux.</p>
+<ul>
+<li>We use the method detailed in [Fedkiw] to perform vorticity confinement. We essentially amplify the curl of the flow field and add it back in, countering dampening from the discrete simulation.</li>
+<li>We use the method detailed in [Foster and Metexas] to simulate thermal buoyancy. The temperature gradient imparts an upward force on certain cells</li>
+<li>We use the method detailed in [Stam] to perform the general field update. This involves several steps
+<ul>
+<li>Add_source adds external sources</li>
+<li>Diffuse diffuses the density/flow into neighboring cells</li>
+<li>Advect moves the density/flow along the flow field</li>
+<li>Project enforces the flux distribution by iteratively solving Poisson's equation using the Gauss-Streidal method.</li>
+</ul></li>
+</ul>
+<p>Of course, the update for each type of field is slightly different.</p>
+<ul>
+<li>We do not diffuse the velocity field because it dampens the flow too mch</li>
+<li>While the flux is generally 0 at most points to model an incompressible fluid, we simulate pressure increases from combustion with a localized increase in flux</li>
+<li>Of course, the project step only applies to the flow field</li>
+<li>The temperature field decays with time in addition to diffusion</li>
+</ul>
+<h2 id="view-models">View models</h2>
+<p>We implemented several different view models. All views allow the user to edit the corresponding field.</p>
+<h2 id="particle-model">Particle model</h2>
+<p>We plan to represent fuel and soot particles with a particle model. Particles carry their own mass and trajectory information, but receive forces from the flow field. We do not model particle-particle interactions, but we can approximate particle &quot;stacking&quot; by enfrocing one particle per cell.</p>
+<p>Fuel particles are the only particle type implemented at the moment. We plan to add more. Fuel particles ignite upon reaching their combustion temperature. Burning fuel particles decrease in mass and dump temperature and smoke particles into the environment. They also increase the flux out of their cell while burning.</p>
+<h1 id="progress-1">Progress</h1>
+<p>We are a week ahead of our original plan. The 2D fluid simulation model was easier than expected to implement. We did run into some bugs, mostly dealing with the boundary conditions of our grid.</p>
+<h1 id="todo">TODO:</h1>
+<ul>
+<li>Fine tune simulation behavior to produce more compelling results</li>
+<li>Implement soot particles</li>
+<li>Fine tune combustion, maybe make it non-deterministic</li>
+<li>Implement a realistic view mode</li>
+<li>Implement saving and loading of scenes</li>
+</ul>
+<h1 id="links">Links:</h1>
+<p>Powerpoint: <a href="https://docs.google.com/presentation/d/17RnwG2kIdVfK7Y-ELy7fM2tOR03fkJob5MRJR25u5zU/edit?usp=sharing"> link </a></p>
+<h1 id="resources-used">Resources used:</h1>
+<ul>
+<li>Feldman, Bryan E., James F. O'brien, and Okan Arikan. &quot;Animating suspended particle explosions.&quot; ACM Transactions on Graphics (TOG). Vol. 22. No. 3. ACM, 2003.</li>
+<li>Stam, Jos. &quot;Real-time fluid dynamics for games.&quot; Proceedings of the game developer conference. Vol. 18. 2003.</li>
+<li>Fedkiw, Ronald, Jos Stam, and Henrik Wann Jensen. &quot;Visual simulation of smoke.&quot; Proceedings of the 28th annual conference on Computer graphics and interactive techniques. ACM, 2001.</li>
+<li>Foster, Nick, and Dimitris Metaxas. &quot;Modeling the motion of a hot, turbulent gas.&quot; Proceedings of the 24th annual conference on Computer graphics and interactive techniques. ACM Press/Addison-Wesley Publishing Co., 1997.</li>
+</ul>
+</body>
+</html>
