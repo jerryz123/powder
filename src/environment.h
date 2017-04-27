@@ -62,6 +62,7 @@ class Environment {
     float* phi;
 
     vector<Particle*>* particles_list;
+    vector<Particle*>* new_particles;
     bool* occupied_cells;
 
 
@@ -82,6 +83,7 @@ class Environment {
     void project();
     void advect(int b, float * d, float * d0, float* u, float* v, float dt, bool isTemp);
     void set_bnd(int b, float * x );
+    void add_new_particle();
 
 
 }; 
