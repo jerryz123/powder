@@ -89,7 +89,6 @@ namespace CGL {
                     particles_list->push_back(new Fuel(Vector2D(i.pos.x + UNIFORM(-0.1, 0.1),
                                                                 i.pos.y + UNIFORM(-0.1, 0.1)),
                                                        4.,
-                                                       1.,
                                                        0,
                                                        0,
                                                       this));
@@ -209,10 +208,11 @@ namespace CGL {
     // 2. diffuse
     // 3. advect
     void Environment::simulate_particle(float delta_t) {
-        particle_positions(delta_t);
+
         for (Particle* p : *particles_list) {
             p->simulate(delta_t);
         }
+        particle_positions(delta_t);
     }
     void Environment::particle_positions(float delta_t) {
         vector<Particle*>* newlist = new vector<Particle*>;
@@ -247,6 +247,8 @@ namespace CGL {
                     p->position.x > 1 && p->position.x < nx_cells - 1 &&
                     p->radius > 0) {
                     newlist->push_back(p);
+                } else {
+                    delete p;
                 }
 
             }
