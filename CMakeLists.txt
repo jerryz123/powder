@@ -63,7 +63,6 @@ if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_CXX_FLAGS}")
 
   endif()
-
 endif(APPLE)
 
 ##################

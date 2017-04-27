@@ -8,7 +8,7 @@
 #include "environment.h"
 #include "particle.h"
 #include <algorithm>
-#include <omp.h>
+//include <omp.h>
 
 #define UNIFORM(a, b) ((rand() / (double) RAND_MAX) * (b - a) + a)
 #define ID(x, y) ((x) + (y)*nx_cells)
@@ -40,6 +40,7 @@ namespace CGL {
         this->smoke_p = (float*)malloc(n_cells*(sizeof(float)));
 
         this->particles_list = new vector<Particle*>;
+        this->new_particles = new vector<Particle*>;
         this->occupied_cells = (bool*)malloc(n_cells*sizeof(bool));
 
         this->phi = (float*)malloc(n_cells*sizeof(float));
@@ -65,6 +66,7 @@ namespace CGL {
     void Environment::simulate(float delta_t, vector<InputItem> inputs) {
         memset(phi, 0, sizeof(float)*nx_cells*ny_cells);
         get_from_UI(delta_t, inputs);
+        add_new_particle();
         calc_vorticity();
         thermal_buoyancy(uy_p, delta_t);
         simulate_particle(delta_t);
@@ -112,8 +114,6 @@ namespace CGL {
         add_source(uy, uy_p, delta_t);
 
         // adds vorticity
-
-
         add_source(ux, vort_f_x, delta_t);
         add_source(uy, vort_f_y, delta_t);
 
@@ -132,7 +132,7 @@ namespace CGL {
                 float T_here = T[ID(i, j)];
                 float T_above = T[ID(i, j - 1)];
                 if (T_above < T_here) {
-                    f[ID(i, j)] -= 8000.*(T_here - T_above);
+                    f[ID(i, j)] -= 6000.*(T_here - T_above);
                 }
             }
         }
@@ -209,11 +209,21 @@ namespace CGL {
     // 3. advect
     void Environment::simulate_particle(float delta_t) {
 
+        new_particles = new vector<Particle*>;
+        particle_positions(delta_t);
+
         for (Particle* p : *particles_list) {
             p->simulate(delta_t);
         }
-        particle_positions(delta_t);
+
     }
+
+    void Environment::add_new_particle() {
+        for (Particle *p : *new_particles) {
+            particles_list->push_back(p);
+        }
+    }
+
     void Environment::particle_positions(float delta_t) {
         vector<Particle*>* newlist = new vector<Particle*>;
         for (int i = 0; i < nx_cells * ny_cells; i++) {
@@ -382,10 +392,6 @@ namespace CGL {
                 x[ID(0, i)] = x[ID(1, i)];
                 x[ID((nx_cells - 2) + 1, i)] = x[ID((nx_cells - 2), i)];
             }
-
-            // converted from following
-            //x[ID(0, i)] = b == 1 ? –x[ID(1, i)] : x[ID(1, i)];
-            //x[ID(nx_cells + 1, i)] = b == 1 ? –x[ID(nx_cells, i)] : x[ID(nx_cells, i)];
         }
 
         // handles x-coord bound setting
@@ -397,10 +403,6 @@ namespace CGL {
                 x[ID(j, 0)] = x[ID(j, 1)];
                 x[ID(j, (ny_cells - 2) + 1)] = x[ID(j, (ny_cells - 2))];
             }
-
-            // converted from following
-            //x[ID(j, 0)] = b == 2 ? –x[ID(j, 1)] : x[ID(j, 1)];
-            //x[ID(j, ny_cells + 1)] = b == 2 ? –x[ID(j, ny_cells)] : x[ID(j, ny_cells)];
         }
 
 
