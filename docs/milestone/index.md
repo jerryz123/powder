@@ -2,6 +2,9 @@
 % CS 184 Final Project Milestone
 % Yujie Wen, Hankun Zhao
 
+<center>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/FR4ZKgah-u0" frameborder="0" allowfullscreen></iframe>
+</center>
 # Summary
 Our project strives to simulate 2D explosions using an incompressible fluid model. As of this milestone we have completed the core simulation model, including fluid field, density, and particle behaviors. We still need to fine tune interactions between components in our model and generate a compelling realistic rendering.
 
