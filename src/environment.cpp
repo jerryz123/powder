@@ -3,13 +3,14 @@
 
 #include "CGL/vector2D.h"
 #include "CGL/vector3D.h"
-
+#include <immintrin.h>
 
 #include "environment.h"
 #include "particle.h"
 #include <algorithm>
 
 #include <omp.h>
+#include <typeinfo>
 
 #define UNIFORM(a, b) ((rand() / (double) RAND_MAX) * (b - a) + a)
 #define ID(x, y) ((x) + (y)*nx_cells)
@@ -41,7 +42,7 @@ namespace CGL {
         this->smoke_p = (float*)malloc(n_cells*(sizeof(float)));
 
         this->particles_list = new vector<Particle*>;
-        this->new_particles = new vector<Particle*>;
+
         this->occupied_cells = (bool*)malloc(n_cells*sizeof(bool));
 
         this->phi = (float*)malloc(n_cells*sizeof(float));
@@ -67,7 +68,7 @@ namespace CGL {
     void Environment::simulate(float delta_t, vector<InputItem> inputs) {
         memset(phi, 0, sizeof(float)*nx_cells*ny_cells);
         get_from_UI(delta_t, inputs);
-        add_new_particle();
+
         calc_vorticity();
         thermal_buoyancy(uy_p, delta_t);
         simulate_particle(delta_t);
@@ -133,8 +134,9 @@ namespace CGL {
                 float T_here = T[ID(i, j)];
                 float T_above = T[ID(i, j - 1)];
                 if (T_above < T_here) {
-                    f[ID(i, j)] -= 6000.*(T_here - T_above);
+                    f[ID(i, j)] -= 4000.*(T_here - T_above);
                 }
+                f[ID(i, j)] -= max(0.f, 200*T_here - f[ID(i, j)]);
             }
         }
     }
@@ -178,9 +180,9 @@ namespace CGL {
     void Environment::simulate_temp(float delta_t) {
         add_source(T, T_p, delta_t);
         SWAP(T_p, T);
-        diffuse(0, T, T_p, T_diff, delta_t, true);
+        diffuse(0, T, T_p, T_diff, delta_t, false);
         SWAP(T_p, T);
-        advect(0, T, T_p, ux, uy, delta_t, true);
+        advect(0, T, T_p, ux, uy, delta_t, false);
         temp_decay(T, delta_t);
     }
 
@@ -213,9 +215,17 @@ namespace CGL {
         new_particles = new vector<Particle*>;
         particle_positions(delta_t);
 
+
         for (Particle* p : *particles_list) {
             p->simulate(delta_t);
         }
+
+        for (Particle* p : *new_particles) {
+            particles_list->push_back(p);
+        }
+
+        delete new_particles;
+
 
     }
 
@@ -230,9 +240,11 @@ namespace CGL {
         for (int i = 0; i < nx_cells * ny_cells; i++) {
             occupied_cells[i] = false;
         }
+        
         for (Particle* p : *particles_list) {
             int x = (int) p->position.x;
             int y = (int) p->position.y;
+
             if (x >= 0 && x < nx_cells &&
                 y >= 0 && y < ny_cells) {
                 p->uy += gravity*p->radius*p->radius*p->density*delta_t;
@@ -248,16 +260,23 @@ namespace CGL {
                     p->uy = 0;
                 }
 
-                while (occupied_cells[ID((int)p->position.x, (int)p->position.y)]) {
-                    p->position.y -= 1;
-                    p->uy = 0;
-                    p->ux = 0;
-                }
-                occupied_cells[ID((int)p->position.x, (int)p->position.y)] = true;
+
+                
                 if (p->position.y > 0 && p->position.y < ny_cells &&
                     p->position.x > 1 && p->position.x < nx_cells - 1 &&
                     p->radius > 0) {
-                    newlist->push_back(p);
+                    while (occupied_cells[ID((int)p->position.x, (int)p->position.y)]) {
+                        p->position.y -= 1;
+                        p->uy = 0;
+                        p->ux = 0;
+                    }
+                    occupied_cells[ID((int)p->position.x, (int)p->position.y)] = true;
+                    if (typeid(*p) == typeid(Soot) && 
+                        (int)p->position.y == ny_cells - 5) {
+                        delete p;
+                    } else {
+                        newlist->push_back(p);
+                    }
                 } else {
                     delete p;
                 }

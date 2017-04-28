@@ -31,8 +31,11 @@ class Soot : public Particle {
         Soot(Vector2D position, float radius,
              float ux, float uy, Environment *env)
             : Particle (position, radius, ux, uy, env) {
+        density = 1.0;
+        is_burning = true;
         }
         virtual void simulate(float delta_t);
+        bool is_burning;
 
 };
 

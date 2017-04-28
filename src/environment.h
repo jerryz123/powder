@@ -16,7 +16,8 @@ namespace CGL {
         temperature,
         smoke,
         debug,
-        fuel
+        fuel,
+        render
     };
     struct InputItem {
         Vector2D pos;

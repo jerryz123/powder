@@ -4,7 +4,9 @@
 #include "environment.h"
 #include "colormap.h"
 #include "particle.h"
+#include <typeinfo>
 
+#define CLIP(x, a, b) (max((float)a, min((float)x, (float)b)))
 namespace CGL {
 
     Application::Application(AppConfig config) { this->config = config; }
@@ -56,9 +58,7 @@ namespace CGL {
                     break;
                 case smoke:
                     t = env->smoke[x+y*config.nx_cells];
-
                     glColor4f(0, 0, 0, t / 8.0f);
-
                     break;
                 case debug:
                     t = env->ux[x+y*config.nx_cells] + 0.5;
@@ -67,6 +67,12 @@ namespace CGL {
                     break;
                 case fuel:
                     glColor4f(0, 0, 0, 0);
+                    break;
+                case InputMode::render:
+                    t = env->smoke[x+y*config.nx_cells];
+                    t1 = env->T[x+y*config.nx_cells];
+                    color = hot(t1/5.f);
+                    glColor4f(color.x, color.y, color.z, t / 8.0f);
                     break;
                 }
                 
@@ -79,11 +85,28 @@ namespace CGL {
         
         switch (config.mode) {
         case fuel:
-            glColor4f(0, 0, 0, 1);
             for (Particle* p : *(env->particles_list)) {
+
+                if (typeid(Fuel) == typeid(*p)) {
+                    glColor4f(0.5, 0.5, 0, 1);
+                } else {
+                    glColor4f(0, 0, 0, 1);
+                }
                 glVertex2d(p->position.x, p->position.y);
             }
             break;
+        case InputMode::render:
+            glEnd();
+            glPointSize(1);
+            glBegin(GL_POINTS);
+            for (Particle* p : *(env->particles_list)) {
+
+                if (typeid(Fuel) == typeid(*p) &&
+                    ((Fuel*)p)->is_burning) {
+                    glVertex2d(p->position.x, p->position.y);
+                    glColor4f(0.5, 0.5, 0, 1);
+                } 
+            }
         }
         glEnd();
         glFlush();
@@ -126,6 +149,8 @@ namespace CGL {
         case 'F':
             config.mode = fuel;
             break;
+        case 'R':
+            config.mode = InputMode::render;
         }
     }
 

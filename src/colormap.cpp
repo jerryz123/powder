@@ -1,6 +1,8 @@
 #include <algorithm>
 #include "colormap.h"
 
+#define CLIP(x, y, z) (max(y, min(x, z)))
+
 namespace CGL {
     Vector3D jet(float x) {
         float r, g, b;
@@ -26,4 +28,12 @@ namespace CGL {
         b = min(max(b, (float)0.), (float)1.);
         return Vector3D(r, g, b);
     }
+    Vector3D hot(float x) {
+        float r = CLIP(8.0 / 3.0 * x, 0.0, 1.0);
+        float g = CLIP(8.0 / 3.0 * x - 1.0, 0.0, 1.0);
+        float b = CLIP(4.0 * x - 3.0, 0.0, 1.0);
+    
+        return Vector3D(r, g, 0.0);
+    }
+    
 };

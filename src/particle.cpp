@@ -10,6 +10,7 @@
 #include <algorithm>
 
 #define ID(x, y) (x + (y)*env->nx_cells)
+#define random() ((double) rand() / RAND_MAX)
 namespace CGL {
     Particle::Particle(Vector2D position, float radius,
                        float ux, float uy, Environment *env) {
@@ -23,14 +24,25 @@ namespace CGL {
 
 
     void Soot::simulate(float delta_t) {
+
         int x = (int) position.x;
         int y = (int) position.y;
-        
+        if (x > 1 && x < env->nx_cells - 1 &&
+            y > 1 && y < env->ny_cells - 1) {
+            if (is_burning) {
+                env->smoke_p[ID(x, y)] += 100;
+                env->T_p[ID(x, y)] += 50;
+            }
+            // if (random() < 0.01) {
+            //     is_burning = false;
+            // }
+        }
     }
 
     void Fuel::simulate(float delta_t) {
         int x = (int) position.x;
         int y = (int) position.y;
+
 
 
         if (env->T[ID(x, y)] > ignition_T ||
@@ -45,17 +57,19 @@ namespace CGL {
             is_burning = true;
             radius -= burn_rate * delta_t;
             env->T_p[ID(x, y)] += 100;
-            env->smoke_p[ID(x, y)] += 50;
+            //env->smoke_p[ID(x, y)] += 50;
 
 
             // particle splitting
-            double powder_rand = ((double) rand() / RAND_MAX);
+            double powder_rand = random();
             if (powder_rand < 0.1) {
-                double rand_direction = ((double) rand() / RAND_MAX);
-                Vector2D dir(cos(2 * PI * rand_direction), 0.5 * sin(2 * PI * rand_direction));
+                double rand_direction = random();
+                Vector2D dir(cos(2 * PI * rand_direction),
+                             0.5 * sin(2 * PI * rand_direction));
                 if (radius > 0) {
-                    double rand_force = ((double) rand() / RAND_MAX) * 10;
-                    Fuel *new_particle = new Fuel(Vector2D(position.x + dir.x, position.y + dir.y),
+                    double rand_force = random() * 10;
+                    Fuel *new_particle = new Fuel(Vector2D(position.x + dir.x,
+                                                           position.y + dir.y),
                                                   radius * 0.5,
                                                   dir.x * rand_force,
                                                   dir.y * rand_force,
@@ -67,10 +81,35 @@ namespace CGL {
                 }
 
             }
+            
+            if (radius > 2) {
+                double soot_rand = random();
+                if (soot_rand < 0.5) {
+                    Soot *new_soot = new Soot(Vector2D(position.x,
+                                                       position.y),
+                                              1.0,
+                                              ux,
+                                              uy,
+                                              env);
+                    Particle* t = new_soot;
+                    env->new_particles->push_back(t);
+                }
 
+
+            }
         }
         if (radius < 0) {
-            env->phi[ID(x, y)] -= 200;
+            if (random() < 0.1) {
+                 Soot *new_soot = new Soot(Vector2D(position.x,
+                                                    position.y),
+                                              1.0,
+                                              ux,
+                                              uy,
+                                              env);
+                 Particle* t = new_soot;
+                 env->new_particles->push_back(t);
+            }
+            env->phi[ID(x, y)] -= 100;
         }
     }
 

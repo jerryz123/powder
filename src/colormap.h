@@ -12,4 +12,5 @@
 using namespace std;
 namespace CGL {
     Vector3D jet(float x);
+    Vector3D hot(float x);
 };
