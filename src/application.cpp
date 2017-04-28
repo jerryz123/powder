@@ -56,7 +56,7 @@ namespace CGL {
                     break;
                 case smoke:
                     t = env->smoke[x+y*config.nx_cells];
-                    glColor4f(0, 0, 0, t);
+                    glColor4f(0, 0, 0, t / 8.0);
                     break;
                 case debug:
                     t = env->ux[x+y*config.nx_cells] + 0.5;

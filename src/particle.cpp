@@ -54,7 +54,7 @@ namespace CGL {
                 double rand_direction = ((double) rand() / RAND_MAX);
                 Vector2D dir(cos(2 * PI * rand_direction), 0.5 * sin(2 * PI * rand_direction));
                 if (radius > 0) {
-                    double rand_force = ((double) rand() / RAND_MAX) * 20;
+                    double rand_force = ((double) rand() / RAND_MAX) * 10;
                     Fuel *new_particle = new Fuel(Vector2D(position.x + dir.x, position.y + dir.y),
                                                   radius * 0.5,
                                                   dir.x * rand_force,
