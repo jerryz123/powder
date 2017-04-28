@@ -8,6 +8,7 @@
 #include "environment.h"
 #include "particle.h"
 #include <algorithm>
+
 #include <omp.h>
 
 #define UNIFORM(a, b) ((rand() / (double) RAND_MAX) * (b - a) + a)
