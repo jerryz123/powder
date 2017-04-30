@@ -43,8 +43,6 @@ namespace CGL {
         int x = (int) position.x;
         int y = (int) position.y;
 
-
-
         if (env->T[ID(x, y)] > ignition_T ||
             is_burning &&
             x > 1 &&
@@ -59,6 +57,15 @@ namespace CGL {
             env->T_p[ID(x, y)] += 100;
             //env->smoke_p[ID(x, y)] += 50;
 
+
+            if (ignite_time == 0) {
+                ignite_time = env->time;
+            }
+            if (is_split && radius > 0.5) {
+                float amount = (float)(200.0 * random());
+                env->smoke[ID(x , y)] += amount;
+                env->T[ID(x , y)] += 0.2 * amount / std::max(radius, 0.5f);
+            }
 
             // particle splitting
             double powder_rand = random();
@@ -76,6 +83,7 @@ namespace CGL {
                                                   env);
                     radius -= radius * 0.5;
                     new_particle->is_burning = true;
+                    new_particle->is_split = true;
                     Particle *temp = new_particle;
                     env->new_particles->push_back(temp);
                 }
@@ -91,6 +99,7 @@ namespace CGL {
                                               ux,
                                               uy,
                                               env);
+
                     Particle* t = new_soot;
                     env->new_particles->push_back(t);
                 }

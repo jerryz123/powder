@@ -41,6 +41,7 @@ class Environment {
     size_t ny_cells;
     float cell_width;
     float cell_height;
+    float time;
 
 
     const float T_diff = 0.005;
@@ -84,7 +85,6 @@ class Environment {
     void project();
     void advect(int b, float * d, float * d0, float* u, float* v, float dt, bool isTemp);
     void set_bnd(int b, float * x );
-    void add_new_particle();
 
 
 }; 

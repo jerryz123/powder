@@ -48,10 +48,14 @@ class Fuel : public Particle {
             density = 0.5;
             is_burning = false;
             ignition_T = 0.5;
+            ignite_time = 0;
+            is_split = false;
         }
     float burn_rate;
     bool is_burning;
     float ignition_T;
+    float ignite_time;
+    bool is_split;
     
     virtual void simulate(float delta_t);
 
