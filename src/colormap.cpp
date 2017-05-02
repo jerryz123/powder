@@ -33,7 +33,7 @@ namespace CGL {
         float g = CLIP(8.0 / 3.0 * x - 1.0, 0.0, 1.0);
         float b = CLIP(4.0 * x - 3.0, 0.0, 1.0);
     
-        return Vector3D(r, g, 0.0);
+        return Vector3D(r, g, b);
     }
     
 };

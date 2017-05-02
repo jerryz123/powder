@@ -31,7 +31,7 @@ namespace CGL {
             steps_per_frame = 1;
             cell_width = 1.0;
             cell_height = 1.0;
-            nx_cells = 400;
+            nx_cells = 600;
             ny_cells = 400;
             is_simulating = true;
             mode = temperature;
@@ -67,6 +67,7 @@ namespace CGL {
         // void cursor_event(float x, float y);
         // void scroll_event(float offset_x, float offset_y);
         void cursor_event(float x, float y, unsigned char keys);
+        float interp(int i0, int i1, int j0, int j1, float* arr);
 
     private:
         AppConfig config;

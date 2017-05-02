@@ -7,6 +7,7 @@
 #include <typeinfo>
 
 #define CLIP(x, a, b) (max((float)a, min((float)x, (float)b)))
+#define ID(i, j) (i + (j * config.nx_cells))
 namespace CGL {
 
     Application::Application(AppConfig config) { this->config = config; }
@@ -25,11 +26,12 @@ namespace CGL {
         glLineWidth(4);
 
         glColor3f(1.0, 1.0, 1.0);
-        glClearColor(1, 1, 1, 1);
+        glClearColor(0, 0, 0, 1);
         env = new Environment(config.nx_cells, config.ny_cells,
                               config.cell_width, config.cell_height);
 
     }
+
 
     void Application::render() {
         if (config.is_simulating) {
@@ -42,36 +44,38 @@ namespace CGL {
         }
         // Draw to screen here
 
-        glPointSize(1.);
+        glPointSize(3);
         glBegin(GL_POINTS);
         
         float t;
         float t1;
         Vector3D color;
-        for (int y = 0; y < config.ny_cells; y++) {
-            for (int x = 0; x < config.nx_cells; x++) {
+
+        for (int y = 0; y < config.ny_cells; y+=1)  {
+            for (int x = 0; x < config.nx_cells; x+=1) {
+                
                 switch (config.mode) {
                 case temperature:
-                    t = env->T[x+y*config.nx_cells];
+                    t = env->T[ID(x, y)];
                     color = jet(t);
                     glColor4f(color.x, color.y, color.z, 1);
                     break;
                 case smoke:
-                    t = env->smoke[x+y*config.nx_cells];
-                    glColor4f(0, 0, 0, t / 8.0f);
+                    t = env->smoke[ID(x, y)];
+                    glColor4f(1, 1, 1, t / 8.0f);
                     break;
                 case debug:
-                    t = env->ux[x+y*config.nx_cells] + 0.5;
-                    t1 = env->uy[x+y*config.nx_cells] + 0.5;
+                    t = env->ux[ID(x, y)] + 0.5;
+                    t1 = env->uy[ID(x, y)] + 0.5;
                     glColor4f(t, t1, 0, 1);
                     break;
                 case fuel:
                     glColor4f(0, 0, 0, 0);
                     break;
                 case InputMode::render:
-                    t = env->smoke[x+y*config.nx_cells];
-                    t1 = env->T[x+y*config.nx_cells];
-                    color = hot(t1/5.f);
+                    t = env->smoke[ID(x, y)];
+                    t1 = env->T[ID(x, y)];
+                    color = hot(t1 / 8.f);
                     glColor4f(color.x, color.y, color.z, t / 8.0f);
                     break;
                 }
@@ -95,18 +99,18 @@ namespace CGL {
                 glVertex2d(p->position.x, p->position.y);
             }
             break;
-        case InputMode::render:
-            glEnd();
-            glPointSize(1);
-            glBegin(GL_POINTS);
-            for (Particle* p : *(env->particles_list)) {
+        // case InputMode::render:
+        //     glEnd();
+        //     glPointSize(1);
+        //     glBegin(GL_POINTS);
+        //     for (Particle* p : *(env->particles_list)) {
 
-                if (typeid(Fuel) == typeid(*p) &&
-                    ((Fuel*)p)->is_burning) {
-                    glVertex2d(p->position.x, p->position.y);
-                    glColor4f(0.5, 0.5, 0, 1);
-                } 
-            }
+        //         if (typeid(Fuel) == typeid(*p) &&
+        //             ((Fuel*)p)->is_burning) {
+        //             glVertex2d(p->position.x, p->position.y);
+        //             glColor4f(0.5, 0.5, 0, 1);
+        //         } 
+        //     }
         }
         glEnd();
         glFlush();
@@ -121,7 +125,7 @@ namespace CGL {
 
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        glOrtho(0, screen_width, screen_height, 0, 1, 0);
+        glOrtho(0, screen_width/2, screen_height/2, 0, 1, 0);
     }
 
     void Application::key_event(char key) {
@@ -158,7 +162,7 @@ namespace CGL {
         int left = keys >> 2;
         if (left > 0) {
             InputItem input;
-            input.pos = Vector2D(x, y);
+            input.pos = Vector2D(x / 2, y / 2);
             input.input_mode = config.mode;
             inputs.push_back(input);
         }

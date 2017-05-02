@@ -4,6 +4,7 @@
 #include "CGL/vector2D.h"
 #include "CGL/vector3D.h"
 #include <immintrin.h>
+#include <xmmintrin.h>
 
 #include "environment.h"
 #include "particle.h"
@@ -134,9 +135,9 @@ namespace CGL {
                 float T_here = T[ID(i, j)];
                 float T_above = T[ID(i, j - 1)];
                 if (T_above < T_here) {
-                    f[ID(i, j)] -= 4000.*(T_here - T_above);
+                    f[ID(i, j)] -= 2000.*(T_here - T_above);
                 }
-                f[ID(i, j)] -= max(0.f, 200*T_here - f[ID(i, j)]);
+                f[ID(i, j)] -= max(0.f, 100*T_here - f[ID(i, j)]);
             }
         }
     }
@@ -188,9 +189,10 @@ namespace CGL {
 
     void Environment::temp_decay(float * T, float delta_t) {
         // need to play with constant
-        float k = 500;
+        float k = 10000;
         #pragma omp parallel for
         for (int j = 1; j <= (ny_cells - 2);j++) {
+            #pragma omp simd
             for (int i = 1; i <= (nx_cells - 2); i++) {
 
                 // calculates surrounding heat by averaging neighboring temperatures
@@ -324,12 +326,11 @@ namespace CGL {
         float* p = ux_p;
         float* div = uy_p;
         h = cell_width;
-        #pragma omp parallel for
+#pragma omp parallel for
         for (j = 1; j <= (ny_cells - 2); j++) {
-            for (i = 1; i <= (nx_cells - 2); i++) {
-
-                div[ID(i, j)] = -0.5f * h * (ux[ID(i + 1, j)] - ux[ID(i - 1, j)] +
-                                uy[ID(i, j + 1)] - uy[ID(i, j - 1)]);
+            #pragma omp simd
+            for (i=1; i <= (nx_cells - 2); i++) {
+                div[ID(i, j)] = -0.5f * h * (ux[ID(i + 1, j)] - ux[ID(i - 1, j)] + uy[ID(i, j + 1)] - uy[ID(i, j - 1)]);
                 p[ID(i,j)] = phi[ID(i, j)];
             }
         }
@@ -338,6 +339,7 @@ namespace CGL {
         for (k = 0; k < 20; k++) {
 #pragma omp parallel for schedule(dynamic, 4)
             for (j = 1 ; j <= (ny_cells - 2); j++ ) {
+                #pragma omp simd
                 for (i = 1 ; i <= (nx_cells - 2); i++ ) {
 
                     p[ID(i, j)] = (div[ID(i, j)] + p[ID(i - 1, j)] + p[ID(i + 1, j)] +
@@ -348,6 +350,7 @@ namespace CGL {
         }
         #pragma omp parallel for
         for (j = 1; j<=(ny_cells - 2); j++ ) {
+            #pragma omp simd
             for (i = 1; i <= (nx_cells - 2); i++ ) {
 
                 ux[ID(i, j)] -= 0.5 * (p[ID(i + 1, j)] - p[ID(i - 1, j)]) / h;
@@ -364,6 +367,7 @@ namespace CGL {
         dt0_y = dt * (ny_cells - 2);
 #pragma omp parallel for schedule(dynamic, 3)
         for (j = 1; j <= (ny_cells - 2); j++ ) {
+#pragma omp simd
             for (i = 1; i <= (nx_cells - 2); i++ ) {
 
                 x = i - dt0_x * u[ID(i, j)];

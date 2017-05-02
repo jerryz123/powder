@@ -56,7 +56,7 @@ namespace CGL {
             }
             is_burning = true;
             radius -= burn_rate * delta_t;
-            env->T_p[ID(x, y)] += 100;
+            env->T_p[ID(x, y)] += 10;
             //env->smoke_p[ID(x, y)] += 50;
 
 
@@ -67,7 +67,7 @@ namespace CGL {
                 Vector2D dir(cos(2 * PI * rand_direction),
                              0.5 * sin(2 * PI * rand_direction));
                 if (radius > 0) {
-                    double rand_force = random() * 10;
+                    double rand_force = random() * 20;
                     Fuel *new_particle = new Fuel(Vector2D(position.x + dir.x,
                                                            position.y + dir.y),
                                                   radius * 0.5,

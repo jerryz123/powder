@@ -47,7 +47,7 @@ class Fuel : public Particle {
             burn_rate = 10;
             density = 0.5;
             is_burning = false;
-            ignition_T = 0.5;
+            ignition_T = 0.8;
         }
     float burn_rate;
     bool is_burning;
