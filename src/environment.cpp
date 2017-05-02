@@ -10,7 +10,7 @@
 #include "particle.h"
 #include <algorithm>
 
-#include <omp.h>
+//#include <omp.h>
 #include <typeinfo>
 
 #define UNIFORM(a, b) ((rand() / (double) RAND_MAX) * (b - a) + a)
@@ -24,6 +24,7 @@ namespace CGL {
         this->ny_cells = ny_cells;
         this->cell_width = cell_width;
         this->cell_height = cell_height;
+        this->time = 0;
 
         int n_cells = nx_cells*ny_cells;
         this->ux = (float*)malloc(n_cells*(sizeof(float)));
@@ -76,6 +77,7 @@ namespace CGL {
         simulate_vel(delta_t);
         simulate_temp(delta_t);
         simulate_smoke(delta_t);
+        time += 1;
     }
     void Environment::get_from_UI(float delta_t, vector<InputItem> inputs) {
 
@@ -97,6 +99,16 @@ namespace CGL {
                                                        0,
                                                        0,
                                                       this));
+                    break;
+                case InputMode::ignited:
+                    Fuel* f = new Fuel(Vector2D(i.pos.x + UNIFORM(-0.1, 0.1),
+                                                                i.pos.y + UNIFORM(-0.1, 0.1)),
+                                                       4.,
+                                                       0,
+                                                       0,
+                                      this);
+                    f->is_burning = true;
+                    particles_list->push_back(f);
                     break;
                 }
             }
@@ -135,7 +147,7 @@ namespace CGL {
                 float T_here = T[ID(i, j)];
                 float T_above = T[ID(i, j - 1)];
                 if (T_above < T_here) {
-                    f[ID(i, j)] -= 2000.*(T_here - T_above);
+                    f[ID(i, j)] -= 500.*(T_here - T_above);
                 }
                 f[ID(i, j)] -= max(0.f, 100*T_here - f[ID(i, j)]);
             }
@@ -231,12 +243,6 @@ namespace CGL {
 
     }
 
-    void Environment::add_new_particle() {
-        for (Particle *p : *new_particles) {
-            particles_list->push_back(p);
-        }
-    }
-
     void Environment::particle_positions(float delta_t) {
         vector<Particle*>* newlist = new vector<Particle*>;
         for (int i = 0; i < nx_cells * ny_cells; i++) {
@@ -262,8 +268,6 @@ namespace CGL {
                     p->uy = 0;
                 }
 
-
-                
                 if (p->position.y > 0 && p->position.y < ny_cells &&
                     p->position.x > 1 && p->position.x < nx_cells - 1 &&
                     p->radius > 0) {

@@ -26,7 +26,7 @@ namespace CGL {
         glLineWidth(4);
 
         glColor3f(1.0, 1.0, 1.0);
-        glClearColor(0, 0, 0, 1);
+        glClearColor(0, 0, 0.1, 1);
         env = new Environment(config.nx_cells, config.ny_cells,
                               config.cell_width, config.cell_height);
 
@@ -69,13 +69,16 @@ namespace CGL {
                     t1 = env->uy[ID(x, y)] + 0.5;
                     glColor4f(t, t1, 0, 1);
                     break;
+                case InputMode::ignited:
+                    glColor4f(0, 0, 0, 0);
+                    break;
                 case fuel:
                     glColor4f(0, 0, 0, 0);
                     break;
                 case InputMode::render:
                     t = env->smoke[ID(x, y)];
                     t1 = env->T[ID(x, y)];
-                    color = hot(t1 / 8.f);
+                    color = hot(t1 / 4.f);
                     glColor4f(color.x, color.y, color.z, t / 8.0f);
                     break;
                 }
@@ -155,6 +158,10 @@ namespace CGL {
             break;
         case 'R':
             config.mode = InputMode::render;
+            break;
+        case 'I':
+            config.mode = InputMode::ignited;
+            break;
         }
     }
 

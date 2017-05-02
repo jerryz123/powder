@@ -31,7 +31,7 @@ class Soot : public Particle {
         Soot(Vector2D position, float radius,
              float ux, float uy, Environment *env)
             : Particle (position, radius, ux, uy, env) {
-        density = 1.0;
+        density = 10.0;
         is_burning = true;
         }
         virtual void simulate(float delta_t);
@@ -47,11 +47,18 @@ class Fuel : public Particle {
             burn_rate = 10;
             density = 0.5;
             is_burning = false;
+
             ignition_T = 0.8;
+
+            ignite_time = 0;
+            is_split = false;
+
         }
     float burn_rate;
     bool is_burning;
     float ignition_T;
+    float ignite_time;
+    bool is_split;
     
     virtual void simulate(float delta_t);
 
