@@ -1,0 +1,155 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="CS 184 Final Project Final" />
+  <title>Animating Explosions with an Incompressible Fluid Model</title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="stylesheet.css" type="text/css" />
+</head>
+<body>
+<div id="header">
+<h1 class="title">Animating Explosions with an Incompressible Fluid Model</h1>
+<h2 class="author">CS 184 Final Project Final</h2>
+<h3 class="date">Yujie Wen, Hankun Zhao</h3>
+</div>
+<div id="TOC">
+<ul>
+<li><a href="#abstract">Abstract</a></li>
+<li><a href="#technical-approach">Technical Approach</a><ul>
+<li><a href="#discretized-fields">Discretized Fields</a></li>
+<li><a href="#velocity-field">Velocity Field</a></li>
+<li><a href="#temperature-and-smoke-interactions">Temperature and Smoke Interactions</a></li>
+<li><a href="#particle-model">Particle Model</a></li>
+<li><a href="#comparison-against-feldman-2003">Comparison against Feldman 2003</a><ul>
+<li><a href="#benefits-of-dense-grid-sparse-particle-model">Benefits of dense-grid, sparse-particle model</a></li>
+<li><a href="#benefits-of-sparse-grid-dense-particle-model">Benefits of sparse-grid, dense-particle model</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#problems-encountered">Problems Encountered</a></li>
+<li><a href="#lessons-learned">Lessons Learned</a></li>
+<li><a href="#results">Results</a></li>
+<li><a href="#references">References</a></li>
+<li><a href="#contributions">Contributions</a><ul>
+<li><a href="#jackson-wen">Jackson Wen</a></li>
+<li><a href="#jerry-zhao">Jerry Zhao</a></li>
+</ul></li>
+</ul>
+</div>
+<center>
+<iframe width="600" height="315" src="https://www.youtube.com/embed/slvs6d1cw7w" frameborder="0" allowfullscreen>
+</iframe>
+</center>
+<h1 id="abstract">Abstract</h1>
+<p>We simulated explosions in 2D using incompressible fluid dynamics, as described in Feldman 2003. A incompressible model should be able to simulate the fireball and particulate effects of an explosion accurately. Our model uses three primary fields: velocity, temperature, and smoke, all governed by the incompressible Navier-Stokes equations. We simplified the particles described in Feldman 2003 to two types: soot, and fuel. Our model considers many interactions, including:</p>
+<ul>
+<li>Interactions between combusting particles and the fluid, temperature, and smoke fields</li>
+<li>Interactions between soot particles and the fluid, temperature, and smoke fields</li>
+<li>Interactions between the temperature field and the fluid field</li>
+<li>Interactions between the smoke field and fluid field</li>
+</ul>
+<h1 id="technical-approach">Technical Approach</h1>
+<h2 id="discretized-fields">Discretized Fields</h2>
+<p>For general field updates we followed the method detailed in Stam. Each field was discretized into a 400 by 600 grid. Simulating the fields involved adding external forces/sources, advecting, projecting, and diffusing the fields in accordance with the Navier-Stokes equations. The effects of each step will be detailed later in this writeup.</p>
+<center>
+<p><br /><img style="vertical-align:middle" src="http://chart.apis.google.com/chart?cht=tx&amp;chl=%20%5Cdot%7Bu%7D%20%3D%20-%28u%20%5Ccdot%20%5Cnabla%29u%20-%20%5Cfrac%7B%5Cnabla%20p%7D%7B%5Crho%7D%20%2B%20%5Cfrac%7Bf%7D%7B%5Crho%7D%20" alt=" \dot{u} = -(u \cdot \nabla)u - \frac{\nabla p}{\rho} + \frac{f}{\rho} " title=" \dot{u} = -(u \cdot \nabla)u - \frac{\nabla p}{\rho} + \frac{f}{\rho} " /><br /></p>
+Navier Stokes. The first term roughly corresponds to self-advection. The second term corresponds to maintaining incompressibility. The third term corresponds to extneral forces.
+</center>
+<h2 id="velocity-field">Velocity Field</h2>
+<center>
+<p><img src="Screen Shot 2017-05-02 at 4.10.03 PM.png" width="600"></p>
+The velocity field. Red-black depicts x direction. Green-black depicts y direction.
+</center>
+<p>We represent the velocity field using a 2D grid structure, where each cell stores the velocity of the fluid in that cell. In a general sense, the Navier Stokes equations states that the components of fluid motion are self-advection, density preservation, and outside forces. For an incompressible model, density is constant, simplifying the solution.</p>
+<p>Advection is performed by performing explicit integration. A cell’s velocity at <img style="vertical-align:middle" src="http://chart.apis.google.com/chart?cht=tx&amp;chl=t%20%2B%20%5CDelta%20t" alt="t + \Delta t" title="t + \Delta t" /> is calculated by tracing the fluid in that cell back to where it was at time t.</p>
+<p>Projection is the procedure which preserves density across the cells. This involves computing the Helmholtz decomposition of the field, which converts the flow field to the sum of divergence-free and curl-free fields. For an incompressible fluid, we simply discard the diverging field to maintain incompressibility.</p>
+<p>Fundamental external forces in our fluid model include forces from vorticity confinement and thermal buoyancy. Vorticity confinement prevents the fluid field from quickly reaching a static equilibrium by amplifying the curl of the fluid field using the method detailed in Fedkiw. This creates a shimmering motion in the stable fluid and creates vortices in moving fluid.</p>
+<center>
+<p><img style="vertical-align:middle" src="http://chart.apis.google.com/chart?cht=tx&amp;chl=%5Cvec%7B%5Comega%7D%20%3D%20%5Cnabla%20%5Ctimes%20%5Cvec%7Bv%7D%20%3D%20%5Cfrac%7B%5Cdelta%20v_y%7D%7B%5Cdelta%20x%7D%20-%20%5Cfrac%7B%5Cdelta%20v_x%7D%7B%5Cdelta%20y%7D" alt="\vec{\omega} = \nabla \times \vec{v} = \frac{\delta v_y}{\delta x} - \frac{\delta v_x}{\delta y}" title="\vec{\omega} = \nabla \times \vec{v} = \frac{\delta v_y}{\delta x} - \frac{\delta v_x}{\delta y}" /></p>
+<p><img style="vertical-align:middle" src="http://chart.apis.google.com/chart?cht=tx&amp;chl=f_%7Bvort%7D%20%3D%20%5Cfrac%7B%5Cepsilon%7D%7B%7C%5Cnabla%20%7C%5Comega%20%7C%7C%7D%28%5Cnabla%20%7C%5Comega%7C%20%5Ctimes%20%5Comega%29" alt="f_{vort} = \frac{\epsilon}{|\nabla |\omega ||}(\nabla |\omega| \times \omega)" title="f_{vort} = \frac{\epsilon}{|\nabla |\omega ||}(\nabla |\omega| \times \omega)" /></p>
+Calculating vorticity confinement forces
+</center>
+<p>For an incompressible fluid, we cannot simulate thermal expansion, so we instead simulate thermal buoyancy by applying an upwards force on cells proportional to the vertical temperature gradient across cells as detailed in Foster and Metexas.</p>
+<center>
+<p><img style="vertical-align:middle" src="http://chart.apis.google.com/chart?cht=tx&amp;chl=f_%7Bthermal%7D%20%3D%20%5Cbeta%20%5Cfrac%7B%5Cdelta%20T%7D%7B%5Cdelta%20y%7D" alt="f_{thermal} = \beta \frac{\delta T}{\delta y}" title="f_{thermal} = \beta \frac{\delta T}{\delta y}" /></p>
+Calculating thermal buoyancy forces
+</center>
+<h2 id="temperature-and-smoke-interactions">Temperature and Smoke Interactions</h2>
+<center>
+<img src="Screen Shot 2017-05-02 at 4.53.01 PM.png" width="300"> <img src="Screen Shot 2017-05-02 at 4.53.10 PM.png" width="300">
+</center>
+<p>The temperature and smoke fields are represented using a similar 2D grid structure as the one used for the velocity field. We treated both temperature and smoke as densities and had each cell in the grid store the temperature, for the temperature field, and the smoke density, for the smoke field, at the location of the cell.</p>
+<p>Diffusion for these two fields is implemented by averaging the temperature and smoke density values for each cell with the values in neighboring cells, which causes temperature and smoke to move from cells with higher density to cells with lower density. We then advect the densities in each cell through the velocity field using the same advection procedure as before.</p>
+<p>In addition to the approach in Stam’s paper, we also implemented temperature decay for the temperature field which uses Newton’s Law of Cooling to compute the drop in temperature for each time step based on the surrounding temperature. This surrounding temperature is calculated as the average of neighboring temperature values for each cell. Doing so allowed the temperature effects of our explosions to disperse faster, and more realistically.</p>
+<center>
+<p><img style="vertical-align:middle" src="http://chart.apis.google.com/chart?cht=tx&amp;chl=%5Cfrac%7B%5Cdelta%20T%7D%7B%5Cdelta%20t%7D%20%3D%20-k%20%28T%20-%20T_%7Bambient%7D%29" alt="\frac{\delta T}{\delta t} = -k (T - T_{ambient})" title="\frac{\delta T}{\delta t} = -k (T - T_{ambient})" /></p>
+Newton's law of cooling
+</center>
+<h2 id="particle-model">Particle Model</h2>
+<center>
+<p><img src="p.png" width="600"></p>
+Particles in an explosion. Brown: fuel. Red: soot.
+</center>
+<p>Our particle model handles two types of particles, fuel and soot. Each particle keeps track of its own location, velocity, radius, and whether or not it is burning. While particle-particle interactions are not modeled, we approximated particle stacking by restricting each cell to only contain 1 particle. For our model, particles are created at an initial radius of 4.</p>
+<p>Fuel particles in particular have additional variables that keep track of its burn rate and the temperature at which it ignites. Once ignited, fuel particles release temperature and smoke into the temperature and smoke fields respectively. At the moment of ignition, the flux of the cell at the fuel particle’s location is also increased to simulate an increase in pressure at the moment of combustion. Ignited fuel particles lose volume at a specified burn rate per time step. Soot particles are created by fuel particles at a probability directed related to the fuel particle’s radius. If the radius of the fuel particle is greater than 2, there is a 50% chance of creating a soot particle with each time step, whereas if the fuel particle has a radius less that 0.5, the probability of spawning a soot particle drops to 10%.</p>
+<p>Particle splitting is a phenomenon unique to fuel particles that have been ignited. Regardless of the radius of the particle, fuel particles that have been lit have a 10% chance of splitting into two smaller ignited particles that are each half the size of the original particle with each time step. The newly created particle is spewed out in a random direction with a random force between 0 and 20 to facilitate multiple smaller chain explosions, thereby increasing the explosion radius. We chose to ignore the radius when determining the probability for splitting particles because we observed that a direct relationship between split probability and particle size resulted in explosions that were too compact, since particles would only split in the very beginning.</p>
+<p>Soot particles are simple particles that add to the temperature and smoke fields at the particle’s position for each timestep. These particles represent the physical debris of an explosion.</p>
+<h2 id="comparison-against-feldman-2003">Comparison against Feldman 2003</h2>
+<p>Feldman 2003 used coarse grid discretization with millions of particles. However, such a particle-heavy model would not run in real time, so we chose to simplify their model further by simulating only several hundred particles at a time. While not as physically accurate, our model still produces visually interesting results.</p>
+<p>We also also discretize our space into smaller blocks, using &gt;100,000 grid cells on a 2D plane, while Feldman used &lt;1000 grid cells in 3D space. Using a dense grid structure with a sparse particle model lets us parallelize the simulations further and render in real time.</p>
+<h3 id="benefits-of-dense-grid-sparse-particle-model">Benefits of dense-grid, sparse-particle model</h3>
+<ul>
+<li>Easily parallelized</li>
+<li>Runs in real-time</li>
+<li>More realistic depiction of atmospheric effects</li>
+</ul>
+<h3 id="benefits-of-sparse-grid-dense-particle-model">Benefits of sparse-grid, dense-particle model</h3>
+<ul>
+<li>Simulates 3D space faster than a dense-grid model</li>
+<li>Easier to render in 3D</li>
+</ul>
+<h1 id="problems-encountered">Problems Encountered</h1>
+<p>Boundary conditions were tricker than expected to understand. We ran into several errors with the boundaries, usually when some particle or thermal interactions disrupt the boundary conditions. When this happened, the disrupted boundary cells would inject heat or smoke back into the box, an undesired effect. We fixed this by disabling user input and updates on boundary cells.</p>
+<p>We also needed to tune many parameters to ensure that the simulation would revert to a stable condition. The strength of vorticity confinement, thermal effects, and diffusion rates were all carefully adjusted. We wanted to see our explosions propagate quickly through the scene, then quickly disperse.</p>
+<p>Keeping a high framerate was important throughout the project. We decreased the number of steps for some of our iterative procedures, sacrificing accuracy for speed. We also found that an interpolating renderer drastically reduced framerates. Whenever possible, routines were parallelized with OpenCL. The interactions between particles and cells prevented us from offloading the grid update computations to highly parallelized shaders.</p>
+<h1 id="lessons-learned">Lessons Learned</h1>
+<p>Discretized methods typically do a subpar job at approximating continuous processes, such as fluid dynamics. While the Navier-Stokes equations are elegantly simple, solving them for a discretized grid over discrete time intervals is a very rough process, requiring many approximations and assumptions.</p>
+<p>The coarseness of discretization places limits on the boundaries of the simulation. We found that, with our chosen grid size and integration procedures, we could not simulate velocities above a certain limit.</p>
+<p>Two dimensional simulations are much simpler than three dimensional simulations. There is no good way to visualize a three dimensional field. Adding an additional dimension would also drastically hurt runtime.</p>
+<h1 id="results">Results</h1>
+<p>Github: <a href="https://github.com/jerryz123/powder">Link</a></p>
+<p>Presentation slides: <a href="https://docs.google.com/a/berkeley.edu/presentation/d/1lLqTfyZg5VyCVAloRXz1MIzehqq-kvxMobxjMP3VOeU/edit?usp=sharing">Link</a></p>
+<center>
+<p><img src="Screen Shot 2017-05-02 at 5.15.33 PM.png" width="600"></p>
+<p><img src="f1.png" width="600"></p>
+<p><img src="f2.png" width="600"></p>
+<p><img src="f3.png" width="300"></p>
+(Note: The aliasing in some of these images is an artifact of the screenshot software)
+</center>
+<h1 id="references">References</h1>
+<ul>
+<li>Feldman, Bryan E., James F. O'brien, and Okan Arikan. &quot;Animating suspended particle explosions.&quot; ACM Transactions on Graphics (TOG). Vol. 22. No. 3. ACM, 2003.</li>
+<li>Stam, Jos. &quot;Real-time fluid dynamics for games.&quot; Proceedings of the game developer conference. Vol. 18. 2003.</li>
+<li>Fedkiw, Ronald, Jos Stam, and Henrik Wann Jensen. &quot;Visual simulation of smoke.&quot; Proceedings of the 28th annual conference on Computer graphics and interactive techniques. ACM, 2001.</li>
+<li>Foster, Nick, and Dimitris Metaxas. &quot;Modeling the motion of a hot, turbulent gas.&quot; Proceedings of the 24th annual conference on Computer graphics and interactive techniques. ACM Press/Addison-Wesley Publishing Co., 1997.</li>
+</ul>
+<h1 id="contributions">Contributions</h1>
+<h2 id="jackson-wen">Jackson Wen</h2>
+<ul>
+<li>Implemented temperature decay</li>
+<li>Implemented vorticity confinement</li>
+<li>Implemented particle model, and splitting behavior</li>
+<li>Implemented the field simulation pipeline</li>
+</ul>
+<h2 id="jerry-zhao">Jerry Zhao</h2>
+<ul>
+<li>Implemented multiple rendering modes</li>
+<li>Implemented user interface</li>
+<li>Implemented OpenMP multithreading</li>
+<li>Implemented thermal buoyancy, diffusion</li>
+<li>Implemented smoke simulation</li>
+</ul>
+</body>
+</html>

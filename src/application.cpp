@@ -97,7 +97,7 @@ namespace CGL {
                 if (typeid(Fuel) == typeid(*p)) {
                     glColor4f(0.5, 0.5, 0, 1);
                 } else {
-                    glColor4f(0, 0, 0, 1);
+                    glColor4f(1, 0, 0, 1);
                 }
                 glVertex2d(p->position.x, p->position.y);
             }

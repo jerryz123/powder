@@ -10,7 +10,7 @@
 #include "particle.h"
 #include <algorithm>
 
-//#include <omp.h>
+#include <omp.h>
 #include <typeinfo>
 
 #define UNIFORM(a, b) ((rand() / (double) RAND_MAX) * (b - a) + a)
@@ -90,7 +90,7 @@ namespace CGL {
                     T_p[ID(x, y)] += 500;
                     break;
                 case InputMode::smoke:
-                    smoke[ID(x, y)] += 10;
+                    smoke[ID(x, y)] += 50;
                     break;
                 case InputMode::fuel:
                     particles_list->push_back(new Fuel(Vector2D(i.pos.x + UNIFORM(-0.1, 0.1),
